@@ -4,7 +4,7 @@
     "MySQL": {
       "Username": "root",
       "Password": "",
-      "Name": "MyRestApp",
+      "Name": "SampleApp",
       "Hostname": "127.0.0.1",
       "Port": 3306,
       "Parameter": "?parseTime=true"
@@ -28,11 +28,11 @@
   },
   "AppInfo": {
     "_comment": "This is a sample data for generating the application, if your schema is not ready yet you can empty this and add you app entities data later.",
-    "Name": "MyRestApp",
+    "Name": "SampleApp",
     "Entities": [
       {
-        "Name": "student",
-        "DisplayName": "Student",
+        "Name": "x_user",
+        "DisplayName": "User",
         "Fields": [
           {
             "Name": "id",
@@ -41,58 +41,22 @@
             "Size": 30
           },
           {
-            "Name": "first_name",
-            "DisplayName": "FirstName",
+            "Name": "name",
+            "DisplayName": "Name",
             "Type": 2,
             "Size": 30
           },
           {
-            "Name": "last_name",
-            "DisplayName": "LastName",
-            "Type": 2,
-            "Size": 30
-          },
-          {
-            "Name": "contact_number",
-            "DisplayName": "ContactNumber",
-            "Type": 1,
-            "Size": 15
-          }
-        ]
-      },
-      {
-        "Name": "address",
-        "DisplayName": "Address",
-        "Fields": [
-          {
-            "Name": "id",
-            "DisplayName": "Id",
-            "Type": 1,
-            "Size": 30
-          },
-          {
-            "Name": "address",
-            "DisplayName": "Address",
-            "Type": 2,
-            "Size": 30
-          },
-          {
-            "Name": "city",
-            "DisplayName": "City",
-            "Type": 2,
-            "Size": 30
-          },
-          {
-            "Name": "student_id",
-            "DisplayName": "StudentId",
+            "Name": "age",
+            "DisplayName": "Age",
             "Type": 1,
             "Size": 30
           }
         ]
       },
       {
-        "Name": "lecture",
-        "DisplayName": "Lecture",
+        "Name": "x_device",
+        "DisplayName": "Device",
         "Fields": [
           {
             "Name": "id",
@@ -101,15 +65,147 @@
             "Size": 30
           },
           {
-            "Name": "subject",
-            "DisplayName": "Subject",
+            "Name": "uuid",
+            "DisplayName": "Uuid",
             "Type": 2,
             "Size": 30
           },
           {
-            "Name": "student_id",
-            "DisplayName": "StudentId",
+            "Name": "user_id",
+            "DisplayName": "UserId",
             "Type": 1,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "x_account",
+        "DisplayName": "Account",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "x_lead",
+        "DisplayName": "Lead",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "lead_type",
+            "DisplayName": "LeadType",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "type_id",
+            "DisplayName": "TypeId",
+            "Type": 1,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "x_product",
+        "DisplayName": "Product",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "x_related_product_group",
+        "DisplayName": "RelatedProductGroup",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "x_unrelated_product_group",
+        "DisplayName": "UnrelatedProductGroup",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "x_product_product_group",
+        "DisplayName": "ProductProductGroup",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "product_id",
+            "DisplayName": "ProductId",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "group_id",
+            "DisplayName": "GroupId",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "group_type",
+            "DisplayName": "GroupType",
+            "Type": 2,
             "Size": 30
           }
         ]
@@ -117,20 +213,44 @@
     ],
     "Relations": [
       {
-        "ParentEntity": "student",
+        "ParentEntity": "x_user",
         "ParentEntityField": "id",
-        "ChildEntity": "address",
-        "ChildEntityField": "student_id",
+        "ChildEntity": "x_device",
+        "ChildEntityField": "user_id",
         "Pivot": "",
         "Type": 1
       },
       {
-        "ParentEntity": "student",
+        "ParentEntity": "x_user",
         "ParentEntityField": "id",
-        "ChildEntity": "lecture",
-        "ChildEntityField": "student_id",
+        "ChildEntity": "x_lead",
+        "ChildEntityField": "type_id",
         "Pivot": "",
         "Type": 2
+      },
+      {
+        "ParentEntity": "x_account",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_lead",
+        "ChildEntityField": "type_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "x_product",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_related_product_group",
+        "ChildEntityField": "id",
+        "Pivot": "x_product_product_group",
+        "Type": 3
+      },
+      {
+        "ParentEntity": "x_product",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_unrelated_product_group",
+        "ChildEntityField": "id",
+        "Pivot": "x_product_product_group",
+        "Type": 3
       }
     ],
     "FieldTypes": [

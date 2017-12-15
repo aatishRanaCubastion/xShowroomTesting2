@@ -1,0 +1,309 @@
+{
+  "AppInfo": {
+    "_comment": "This is a sample data for generating the xShowroom application",
+    "Name": "xShowroom",
+    "Entities": [
+      {
+        "Name": "x_account",
+        "DisplayName": "Account"
+      },
+      {
+        "Name": "x_act_notes",
+        "DisplayName": "ActivityNotes"
+      },
+      {
+        "Name": "x_api_tracker",
+        "DisplayName": "ApiTracker"
+      },
+      {
+        "Name": "x_app_login_attempt",
+        "DisplayName": "AppLoginAttempt"
+      },
+      {
+        "Name": "x_asset_folder",
+        "DisplayName": "AssetFolder"
+      },
+      {
+        "Name": "x_att",
+        "DisplayName": "Attachment"
+      },
+      {
+        "Name": "x_att_dtl",
+        "DisplayName": "AttacyhmentDetail"
+      },
+      {
+        "Name": "x_catalog",
+        "DisplayName": "Catalog"
+      },
+      {
+        "Name": "x_catalog_prod",
+        "DisplayName": "CatalogProduct"
+      },
+      {
+        "Name": "x_catalog_users",
+        "DisplayName": "CatalogUser"
+      },
+      {
+        "Name": "x_competitor",
+        "DisplayName": "Competitor"
+      },
+      {
+        "Name": "x_demo",
+        "DisplayName": "Demo"
+      },
+      {
+        "Name": "x_demo_group",
+        "DisplayName": "DemoGroup"
+      },
+      {
+        "Name": "x_demo_group_container",
+        "DisplayName": "DemoGroupContainer"
+      },
+      {
+        "Name": "x_demo_group_dtl",
+        "DisplayName": "DemoGroupDetail"
+      },
+      {
+        "Name": "x_demo_group_dtl_item",
+        "DisplayName": "DemoGroupDetailItem"
+      },
+      {
+        "Name": "x_device",
+        "DisplayName": "Device"
+      },
+      {
+        "Name": "x_email_template",
+        "DisplayName": "EmailTemplate"
+      },
+      {
+        "Name": "x_email_template_dtl",
+        "DisplayName": "EmailTemplateDetail"
+      },
+      {
+        "Name": "x_evt_act",
+        "DisplayName": "Activity"
+      },
+      {
+        "Name": "x_lead",
+        "DisplayName": "Lead"
+      },
+      {
+        "Name": "x_lead_att",
+        "DisplayName": "LeadAttachment"
+      },
+      {
+        "Name": "x_lead_competitors",
+        "DisplayName": "LeadCompetitor"
+      },
+      {
+        "Name": "x_lead_notes",
+        "DisplayName": "Note"
+      },
+      {
+        "Name": "x_lead_prod",
+        "DisplayName": "LeadProduct"
+      },
+      {
+        "Name": "x_lead_prod_attr",
+        "DisplayName": "LeadProductAttribute"
+      },
+      {
+        "Name": "x_lead_stage_transition",
+        "DisplayName": "LeadStageTransition"
+      },
+      {
+        "Name": "x_list_of_val",
+        "DisplayName": "ListOfValue"
+      },
+      {
+        "Name": "x_master_release",
+        "DisplayName": "MasterRelease"
+      },
+      {
+        "Name": "x_option",
+        "DisplayName": "Option"
+      },
+      {
+        "Name": "x_option_attr",
+        "DisplayName": "optionAttribute"
+      },
+      {
+        "Name": "x_opt_attr_pri_comp",
+        "DisplayName": "OptionAttributePricingComponent"
+      },
+      {
+        "Name": "x_opt_attr_pri_dim",
+        "DisplayName": "OptionAttributePricingDimension"
+      },
+      {
+        "Name": "x_org_ext",
+        "DisplayName": "Organization"
+      },
+      {
+        "Name": "x_pipeline_sales_stages",
+        "DisplayName": "PipelineSalesStages"
+      },
+      {
+        "Name": "x_postn",
+        "DisplayName": "Position"
+      },
+      {
+        "Name": "x_pri_comp",
+        "DisplayName": "PricingComponent"
+      },
+      {
+        "Name": "x_pri_comp_def",
+        "DisplayName": "PricingComponentDefinition"
+      },
+      {
+        "Name": "x_pri_comp_group",
+        "DisplayName": "PricingComponentGroup"
+      },
+      {
+        "Name": "x_pri_comp_group_item",
+        "DisplayName": "PricingComponentGroupItem"
+      },
+      {
+        "Name": "x_pri_dd",
+        "DisplayName": "PricingDimensionDefinition"
+      },
+      {
+        "Name": "x_pri_dim",
+        "DisplayName": "PricingDimension"
+      },
+      {
+        "Name": "x_prod",
+        "DisplayName": "Product"
+      },
+      {
+        "Name": "x_prod_demo_group",
+        "DisplayName": "ProductDemoGroup"
+      },
+      {
+        "Name": "x_prod_demo_group_dtl",
+        "DisplayName": "ProductDemoGroupDetail"
+      },
+      {
+        "Name": "x_prod_feature_grp",
+        "DisplayName": "ProductFeatureGroup"
+      },
+      {
+        "Name": "x_prod_feature_item",
+        "DisplayName": "ProductFeatureItem"
+      },
+      {
+        "Name": "x_prod_grp_prod_intertables",
+        "DisplayName": "ProductGroupProduct"
+      },
+      {
+        "Name": "x_prod_In_feature_grp",
+        "DisplayName": "ProductInFeatureGroup"
+      },
+      {
+        "Name": "x_prod_In_feature_item",
+        "DisplayName": "ProductInFeatureItem"
+      },
+      {
+        "Name": "x_prod_option",
+        "DisplayName": "ProductOption"
+      },
+      {
+        "Name": "x_prod_option_attr",
+        "DisplayName": "ProductOptionAttribute"
+      },
+      {
+        "Name": "x_prod_pri_comp",
+        "DisplayName": "ProductPricingComponent"
+      },
+      {
+        "Name": "x_prod_pri_dim",
+        "DisplayName": "ProductPricingDimension"
+      },
+      {
+        "Name": "x_prod_rel_prod_grps",
+        "DisplayName": "ProductRelatedProductGroup"
+      },
+      {
+        "Name": "x_prod_rpt_group",
+        "DisplayName": "ProductReportGroup"
+      },
+      {
+        "Name": "x_quarter_def",
+        "DisplayName": "QuaterDefinition"
+      },
+      {
+        "Name": "rel_prd_grp_def",
+        "DisplayName": "ProductGroupDefinition"
+      },
+      {
+        "Name": "rel_prd_grp_def_prods",
+        "DisplayName": "ProductGroupDefinitionProduct"
+      },
+      {
+        "Name": "x_sales_method",
+        "DisplayName": "SalesMethod"
+      },
+      {
+        "Name": "x_sales_stage",
+        "DisplayName": "SalesStages"
+      },
+      {
+        "Name": "x_sales_target",
+        "DisplayName": "SalesTarget"
+      },
+      {
+        "Name": "x_sales_target_period",
+        "DisplayName": "SalesTargetPeriod"
+      },
+      {
+        "Name": "x_sku",
+        "DisplayName": "StockKeepingUnit"
+      },
+      {
+        "Name": "x_sku_option",
+        "DisplayName": "StockKeepingUnitOption"
+      },
+      {
+        "Name": "x_sku_pri_comp",
+        "DisplayName": "StockKeepingUnitPricingComponent"
+      },
+      {
+        "Name": "x_sku_pri_dim",
+        "DisplayName": "StockKeepingUnitPricingDimension"
+      },
+      {
+        "Name": "x_tax_slab",
+        "DisplayName": "TaxSlab"
+      },
+      {
+        "Name": "x_user",
+        "DisplayName": "User"
+      }
+    ],
+    "Relations": [],
+    "FieldTypes": [
+      {
+        "Id": 1,
+        "Name": "int"
+      },
+      {
+        "Id": 2,
+        "Name": "varchar"
+      }
+    ],
+    "RelationTypes": [
+      {
+        "Id": 1,
+        "Name": "OneToOne"
+      },
+      {
+        "Id": 2,
+        "Name": "OneToMany"
+      },
+      {
+        "Id": 3,
+        "Name": "ManyToMany"
+      }
+    ]
+  }
+}
