@@ -1,0 +1,161 @@
+{
+  "Database": {
+    "Type": "MySQL",
+    "MySQL": {
+      "Username": "root",
+      "Password": "",
+      "Name": "MyRestApp",
+      "Hostname": "127.0.0.1",
+      "Port": 3306,
+      "Parameter": "?parseTime=true"
+    }
+  },
+  "Email": {
+    "Username": "",
+    "Password": "",
+    "Hostname": "",
+    "Port": 25,
+    "From": ""
+  },
+  "Server": {
+    "Hostname": "",
+    "UseHTTP": true,
+    "UseHTTPS": false,
+    "HTTPPort": 9000,
+    "HTTPSPort": 443,
+    "CertFile": "tls/server.crt",
+    "KeyFile": "tls/server.key"
+  },
+  "AppInfo": {
+    "_comment": "This is a sample data for generating the application, if your schema is not ready yet you can empty this and add you app entities data later.",
+    "Name": "MyRestApp",
+    "Entities": [
+      {
+        "Name": "student",
+        "DisplayName": "Student",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "first_name",
+            "DisplayName": "FirstName",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "last_name",
+            "DisplayName": "LastName",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "contact_number",
+            "DisplayName": "ContactNumber",
+            "Type": 1,
+            "Size": 15
+          }
+        ]
+      },
+      {
+        "Name": "address",
+        "DisplayName": "Address",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "address",
+            "DisplayName": "Address",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "city",
+            "DisplayName": "City",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "student_id",
+            "DisplayName": "StudentId",
+            "Type": 1,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "lecture",
+        "DisplayName": "Lecture",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "subject",
+            "DisplayName": "Subject",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "student_id",
+            "DisplayName": "StudentId",
+            "Type": 1,
+            "Size": 30
+          }
+        ]
+      }
+    ],
+    "Relations": [
+      {
+        "ParentEntity": "student",
+        "ParentEntityField": "id",
+        "ChildEntity": "address",
+        "ChildEntityField": "student_id",
+        "Pivot": "",
+        "Type": 1
+      },
+      {
+        "ParentEntity": "student",
+        "ParentEntityField": "id",
+        "ChildEntity": "lecture",
+        "ChildEntityField": "student_id",
+        "Pivot": "",
+        "Type": 2
+      }
+    ],
+    "FieldTypes": [
+      {
+        "Id": 1,
+        "Name": "int"
+      },
+      {
+        "Id": 2,
+        "Name": "varchar"
+      }
+    ],
+    "RelationTypes": [
+      {
+        "Id": 1,
+        "Name": "OneToOne"
+      },
+      {
+        "Id": 2,
+        "Name": "OneToMany"
+      },
+      {
+        "Id": 3,
+        "Name": "ManyToMany"
+      }
+    ]
+  }
+}
