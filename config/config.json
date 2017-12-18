@@ -3,7 +3,7 @@
     "Type": "MySQL",
     "MySQL": {
       "Username": "root",
-      "Password": "",
+      "Password": "password",
       "Name": "SampleApp",
       "Hostname": "127.0.0.1",
       "Port": 3306,

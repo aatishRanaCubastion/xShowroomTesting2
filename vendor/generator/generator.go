@@ -12,6 +12,18 @@ import (
 	"strconv"
 	u "utils"
 )
+/*
+func init(){
+	error:=os.Mkdir("vendor/"+const_ModelsPath,0777)
+	if error!=nil{
+		log.Fatal(error)
+	}
+	error = os.Mkdir("vendor/"+const_MyGraphQlPath,0777)
+	if error!=nil{
+		log.Fatal(error)
+	}
+}*/
+
 
 var const_ConfigPath = "config"
 var const_JsonConfigPath = "jsonconfig"
@@ -163,7 +175,7 @@ func GenerateCode(appName string) {
 	defer fileSchema.Close()
 	//created file
 	appSchema := NewFile(const_MyGraphQlPath)
-	createSchema(appSchema, entities)
+	createSchema(appSchema, entities,database.SQL)
 
 	//create appName.go
 	fileMain, err := os.Create(appName + ".go")
@@ -299,7 +311,7 @@ func createResolver(resolverFile *File, allModels []string) {
 	}
 }
 
-func createSchema(schemaFile *File, allEntities []Entity) {
+func createSchema(schemaFile *File, allEntities []Entity,db *gorm.DB) {
 
 	sS := ""
 	//write root schema
@@ -330,8 +342,26 @@ func createSchema(schemaFile *File, allEntities []Entity) {
 	//	u.SAppend(&sS, "\tcreate"+entityNameCaps+"("+entityNameLower+": "+entityNameCaps+"Input!) : ["+entityNameCaps+"]!\n")
 	//}
 	//u.SAppend(&sS, "}\n\n")
+	var relationParent = []Relation{}
+	var relationChild = []Relation{}
+
+
+
 
 	for _, val := range allEntities {
+		db.Preload("InterEntity").
+			Preload("ChildEntity").
+			Preload("ChildColumn").
+			Preload("ParentColumn").
+			Where("parent_entity_id=?",val.ID).
+			Find(&relationParent)
+		db.Preload("InterEntity").
+			Preload("ParentEntity").
+			Preload("ChildColumn").
+			Preload("ParentColumn").
+			Where("child_entity_id=?",val.ID).
+			Find(&relationChild)
+
 		//entityNameLower := strings.ToLower(val.DisplayName)
 		entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
 
@@ -347,6 +377,33 @@ func createSchema(schemaFile *File, allEntities []Entity) {
 
 			u.SAppend(&sS, "\t"+col.Name+": "+fieldType+"!\n")
 		}
+		for _,child:=range relationParent{
+
+			fieldType := child.ChildEntity.DisplayName
+			fieldTypeLower:=strings.ToLower(child.ChildEntity.DisplayName)
+
+			if child.RelationTypeID == 2 || child.RelationTypeID ==3 {
+				u.SAppend(&sS, "\t" + fieldTypeLower+"s" + ": " +"["+fieldType +"!]"+ "!\n")
+			}else{
+				u.SAppend(&sS, "\t" + fieldTypeLower + ": "+fieldType + "!\n")
+
+			}
+		}
+
+		for _,child:=range relationChild{
+
+			fieldType := child.ParentEntity.DisplayName
+			fieldTypeLower:=strings.ToLower(child.ParentEntity.DisplayName)
+
+			if child.RelationTypeID ==3 {
+				u.SAppend(&sS, "\t" + fieldTypeLower+"s" + ": " +"["+fieldType +"!]"+ "!\n")
+			}else{
+				u.SAppend(&sS, "\t" + fieldTypeLower + ": "+fieldType + "!\n")
+
+			}
+		}
+
+
 		u.SAppend(&sS, "}\n")
 
 		u.SAppend(&sS, "input "+entityNameCaps+"Input {\n")
@@ -362,8 +419,21 @@ func createSchema(schemaFile *File, allEntities []Entity) {
 
 			u.SAppend(&sS, "\t"+col.Name+": "+fieldType+"!\n")
 		}
+		for _,child:=range relationParent{
+
+			fieldType := child.ChildEntity.DisplayName
+			fieldTypeLower:=strings.ToLower(child.ChildEntity.DisplayName)
+
+			if child.RelationTypeID == 2 || child.RelationTypeID ==3 {
+				u.SAppend(&sS, "\t" + fieldTypeLower+"s" + ": " +"["+fieldType +"Input!]"+ "\n")
+			}else{
+				u.SAppend(&sS, "\t" + fieldTypeLower + ": "+fieldType +"Input"+ "\n")
+
+			}
+		}
 		u.SAppend(&sS, "}\n\n")
 	}
+
 
 	schemaFile.Var().Id("Schema").Op("=").Id("`" + sS + "`")
 }

@@ -9,12 +9,9 @@ import (
 	"config"
 )
 
-
-
 var con = &config.Configuration{}
 
 func main() {
-
 	// Get flag -s(sample data)
 	includeSample := flag.Bool("s", false, "a bool")
 	flag.Parse()
