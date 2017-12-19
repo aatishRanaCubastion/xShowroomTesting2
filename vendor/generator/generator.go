@@ -288,16 +288,16 @@ func createResolver(resolverFile *File, allModels []string) {
 
 		// uncomment when create and delete resolvers are done
 
-		////writing root mutation resolvers
-		//resolverFile.Empty()
-		//resolverFile.Comment("create resolver for " + val)
-		//resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Create"+val).Params(Id("args").StructFunc(func(g *Group) {
-		//	g.Id("ID").Qual(const_GraphQlPath, "ID")
-		//})).Params(Id("*" + strings.ToLower(val) + "Resolver")).
-		//	BlockFunc(func(g *Group) {
-		//	g.Return(Qual("", "ResolveCreate"+val)).Call(Id("args"))
-		//})
-		//
+		//writing root mutation resolvers
+		resolverFile.Empty()
+		resolverFile.Comment("create resolver for " + val)
+		resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Create"+val).Params(Id("args").StructFunc(func(g *Group) {
+			g.Id("ID").Qual(const_GraphQlPath, "ID")
+		})).Params(Id("*" + strings.ToLower(val) + "Resolver")).
+			BlockFunc(func(g *Group) {
+			g.Return(Qual("", "ResolveCreate"+val)).Call(Id("args"))
+		})
+
 		////writing root mutation resolvers
 		//resolverFile.Empty()
 		//resolverFile.Comment("delete resolver for " + val)
@@ -525,7 +525,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 			switch relation.RelationTypeID {
 			case 1: //one to one
 				relationName := name
-				finalId := relationName + " " + d + name + " `gorm:\"ForeignKey:" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + ",omitempty\"`"
+				finalId := relationName + " " + d + name + " `gorm:\":" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + ",omitempty\"`"
 				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName})
 				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToOne" + relType, relationName, childName})
 				g.Id(finalId)
@@ -638,7 +638,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 	})
 
 	//write resolver
-	createEntitiesResolver(resolverFile, entityName, entity)
+	createEntitiesResolver(resolverFile, entityName, entity,database.SQL)
 
 	createEntitiesChildSlice(modelFile, entityName, entityRelationsForAllEndpoint)
 
@@ -738,7 +738,25 @@ func createEntities(entity Entity, db *gorm.DB) string {
 	return entityName
 }
 
-func createEntitiesResolver(resolverFile *File, entityName string, entity Entity) {
+func createEntitiesResolver(resolverFile *File, entityName string, entity Entity, db *gorm.DB) {
+
+	var childOfEntity = []Relation{}
+	db.Preload("InterEntity").
+		Preload("ChildEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("parent_entity_id=?", entity.ID).
+		Find(&childOfEntity)
+	var parOfEntity = []Relation{}
+	db.Preload("InterEntity").
+		Preload("ParentEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("child_entity_id=?", entity.ID).
+		Find(&parOfEntity)
+
+
+
 	entityNameLower := strings.ToLower(entityName)
 	resolverFile.Comment("Struct for graphql")
 	resolverFile.Type().Id(entityNameLower).StructFunc(func(g *Group) {
@@ -746,6 +764,33 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		for _, column := range entity.Columns {
 			mapColumnTypesResolver(column, g, false)
 		}
+		for _,child:=range childOfEntity{
+
+
+			fieldTypeLower:=strings.ToLower(child.ChildEntity.DisplayName)
+
+			if child.RelationTypeID == 2 || child.RelationTypeID ==3 {
+				g.Id(fieldTypeLower+"s").Op("[]*").Id(fieldTypeLower)
+			}else{
+				g.Id(fieldTypeLower).Id("*"+fieldTypeLower)
+
+			}
+		}
+
+		for _,child:=range parOfEntity{
+
+
+			fieldTypeLower:=strings.ToLower(child.ParentEntity.DisplayName)
+
+			if child.RelationTypeID ==3 {
+				g.Id(fieldTypeLower+"s").Op("[]*").Id(fieldTypeLower)
+			}else{
+				g.Id(fieldTypeLower).Id("*"+fieldTypeLower)
+
+			}
+		}
+
+
 	})
 	resolverFile.Empty()
 	resolverFile.Comment("Struct for upserting")
@@ -753,6 +798,19 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		//write primitive fields
 		for _, column := range entity.Columns {
 			mapColumnTypesResolver(column, g, true)
+		}
+
+		for _,child:=range childOfEntity{
+			fieldType := child.ChildEntity.DisplayName
+			fieldTypeLower:=strings.ToLower(child.ChildEntity.DisplayName)
+
+
+			if child.RelationTypeID == 2 || child.RelationTypeID ==3 {
+				g.Id(fieldType+"s").Op("*[]").Id(fieldTypeLower+"Input")
+			}else{
+				g.Id(fieldType).Id("*"+fieldTypeLower+"Input")
+
+			}
 		}
 	})
 	resolverFile.Empty()
@@ -791,6 +849,104 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		})
 		g.Return(Id("response"))
 	})
+
+	resolverFile.Empty()
+	resolverFile.Empty()
+
+	//Create/update Resolver
+
+	resolverFile.Func().Id("ResolveCreate"+entityName).Params(Id("args").Id("*").StructFunc(func(g *Group) {
+
+		g.Id(entityName+" *").Id(entityNameLower+"Input")
+
+
+	})).Id("*"+entityNameLower+"Resolver").BlockFunc(func(h *Group) {
+
+
+		h.Var().Id(entityNameLower).Op("=").Op("&").Id(entityNameLower).Op("{}")
+		h.Empty()
+		h.If(Id("args").Dot(entityName).Dot("Id").Op("==").Nil()).Block(
+
+			Id(entityNameLower).Op("=").Id("Map"+entityName).Params(Id("models").Dot("Post"+entityName).
+				Params(Id("args").Dot(entityName))),
+
+		).Else().Block(
+
+			Id(entityNameLower).Op("=").Id("Map"+entityName).Call(Id("models").Dot("Put"+entityName).
+				Call(Id("args").Dot(entityName))),
+
+		)
+
+
+		for _,val:=range childOfEntity{
+
+			var childName = val.ChildEntity.DisplayName
+			var childNameLower = strings.ToLower(val.ChildEntity.DisplayName)
+
+
+			if val.RelationTypeID ==1{
+
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName).Op("!=").Nil()).Block(
+
+					If(Id("args").Dot(entityName).Dot(childName).Dot("Id").Op("==").Nil()).Block(
+
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+						Id("Map"+childName).Call(Id("models").Dot("Post"+childName).
+						Params(Id("args").Dot(entityName).Dot(childName))),
+
+
+
+					).Else().Block(
+
+
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+							Id("Map"+childName).Call(Id("models").Dot("Put"+childName).
+							Params(Id("args").Dot(entityName).Dot(childName))),
+
+					),
+
+				)
+
+			}else if val.RelationTypeID == 2 || val.RelationTypeID==3{
+
+
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName+"s").Op("!=").Nil()).Block(
+
+					For(Id("_ ,").Id("dev").Op(":=").Range().Id("*args").Dot(entityName).Dot(childName+"s")).Block(
+
+
+
+					If(Id("dev").Dot("Id").Op("==").Nil()).Block(
+
+
+							Id("Map"+childName).Call(Id("models").Dot("Post"+childName).
+							Params(Id("args").Dot(entityName).Dot(childName+"s"))),
+
+
+
+					).Else().Block(
+
+
+							Id("Map"+childName).Call(Id("models").Dot("Put"+childName).
+							Params(Id("args").Dot(entityName).Dot(childName+"s"))),
+
+					),
+
+				),
+				)
+			}
+
+
+
+		}
+
+		h.Return(Id("&"+entityNameLower+"Resolver").Op("{").Id(entityNameLower).Op("}"))
+
+
+	})
+
 	resolverFile.Empty()
 	resolverFile.Empty()
 	resolverFile.Comment("Fields resolvers")
