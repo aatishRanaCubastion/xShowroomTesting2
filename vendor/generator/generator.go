@@ -108,6 +108,7 @@ type EntityRelation struct {
 	Type             string
 	SubEntityName    string
 	SubEntityColName string
+	InterEntityName  string
 }
 
 type EntityRelationMethod struct {
@@ -276,7 +277,7 @@ func createResolver(resolverFile *File, allModels []string) {
 
 		// uncomment when create and delete resolvers are done
 
-		//writing root mutation resolvers
+		//writing Create/Update root mutation resolvers
 		//resolverFile.Empty()
 		//resolverFile.Comment("create resolver for " + val)
 		//resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Create"+val).Params(Id("args").StructFunc(func(g *Group) {
@@ -285,16 +286,17 @@ func createResolver(resolverFile *File, allModels []string) {
 		//	BlockFunc(func(g *Group) {
 		//	g.Return(Qual("", "ResolveCreate"+val)).Call(Id("args"))
 		//})
-		//
-		////writing root mutation resolvers
-		//resolverFile.Empty()
-		//resolverFile.Comment("delete resolver for " + val)
-		//resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Delete"+val).Params(Id("args").StructFunc(func(g *Group) {
-		//	g.Id("ID").Qual(const_GraphQlPath, "ID")
+
+		//writing Delete root mutation resolvers
+		resolverFile.Empty()
+		resolverFile.Comment("delete resolver for " + val)
+		resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Delete"+val).Params(Id("args").StructFunc(func(g *Group) {
+			g.Id("ID").Qual(const_GraphQlPath, "ID")
 		//})).Params(Id("*" + strings.ToLower(val) + "Resolver")).
-		//	BlockFunc(func(g *Group) {
-		//	g.Return(Qual("", "ResolveDelete"+val)).Call(Id("args"))
-		//})
+		})).Params(Id("*int")).
+			BlockFunc(func(g *Group) {
+			g.Return(Qual("", "ResolveDelete"+val)).Call(Id("args"))
+		})
 
 	}
 }
@@ -322,14 +324,21 @@ func createSchema(schemaFile *File, allEntities []Entity) {
 	//uncomment when mutation resolvers are done
 
 	////write mutation schema
-	//u.SAppend(&sS, "# The mutation type, represents all updates we can make to our data\n")
-	//u.SAppend(&sS, "type Mutation {\n")
-	//for _, val := range allEntities {
-	//	entityNameLower := strings.ToLower(val.DisplayName)
-	//	entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
-	//	u.SAppend(&sS, "\tcreate"+entityNameCaps+"("+entityNameLower+": "+entityNameCaps+"Input!) : ["+entityNameCaps+"]!\n")
-	//}
-	//u.SAppend(&sS, "}\n\n")
+	u.SAppend(&sS, "# The mutation type, represents all updates we can make to our data\n")
+	u.SAppend(&sS, "type Mutation {\n")
+	u.SAppend(&sS, "# Create\n")
+	for _, val := range allEntities {
+		entityNameLower := strings.ToLower(val.DisplayName)
+		entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
+		u.SAppend(&sS, "\tcreate"+entityNameCaps+"("+entityNameLower+": "+entityNameCaps+"Input!) : ["+entityNameCaps+"]!\n")
+	}
+	u.SAppend(&sS, "# Delete\n")
+	for _, val := range allEntities {
+		entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
+		u.SAppend(&sS, "\t" + "delete"+entityNameCaps + "(id: ID!,cascadeDelete: Boolean) : Int \n")
+	}
+	u.SAppend(&sS, "}\n\n")
+
 
 	for _, val := range allEntities {
 		//entityNameLower := strings.ToLower(val.DisplayName)
@@ -439,10 +448,11 @@ func createEntities(entity Entity, db *gorm.DB) string {
 			entityFields = append(entityFields, mapColumnTypesGorm(column, g))
 		}
 
+		//fmt.Println(entityFields)
 		//write composite fields while looking at parent
 		for _, relation := range relationsParent {
 			interName :=relation.InterEntity.DisplayName
-			fmt.Println("parent ", relation.InterEntity.Name)
+			//fmt.Println("parent ", relation.InterEntity.Name)
 			name := snakeCaseToCamelCase(relation.ChildEntity.DisplayName)
 
 			childName := string(relation.ChildColumn.Name)
@@ -459,29 +469,33 @@ func createEntities(entity Entity, db *gorm.DB) string {
 			case 1: //one to one
 				relationName := name
 				finalId := relationName + " " + d + name + " `gorm:\"ForeignKey:" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + ",omitempty\"`"
-				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName})
-				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToOne" + relType, relationName, childName})
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName,""})
+				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToOne" + relType, relationName, childName,""})
 				g.Id(finalId)
 			case 2: //one to many
 				relationName := name
-				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", relationName, childName})
+				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", relationName, childName,""})
 				relationName = name + "s"
 				finalId := relationName + " []" + name + " `gorm:\"ForeignKey:" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
-				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToMany", name, childName})
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToMany", name, childName,""})
 				g.Id(finalId)
 			case 3: //many to many
-				relationName := interName
-				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", relationName, childName})
+				relationName := name
+				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", "", childName,interName})
 				relationName = name + "s"
 				//finalId := relationName + " []" + name + " `gorm:\"many2many:" + relation.InterEntity.Name + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
 				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
 				g.Id(finalId)
-				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"ManyToMany", name, childName})
+				//finalInterId := interName + " []" + interName + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				//g.Id(finalInterId)
+
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"ManyToMany", name, childName,""})
 			}
 		}
 
 		//write composite fields while looking at child
 		for _, relation := range relationsChild {
+			interName :=relation.InterEntity.DisplayName
 			name := snakeCaseToCamelCase(relation.ParentEntity.DisplayName)
 			childName := string(relation.ChildColumn.Name)
 
@@ -490,15 +504,24 @@ func createEntities(entity Entity, db *gorm.DB) string {
 				// means current entity's one item belongs to
 				if name != entityName {
 					// if check to exclude self join
-					entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{const_OneToOne + const_reverse, name, childName})
+					entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{const_OneToOne + const_reverse, name, childName,""})
 				}
 			case 2: //one to many
 				// means current entity's many items belongs to
 				finalId := name + " " + name + " `gorm:\"ForeignKey:" + snakeCaseToCamelCase(childName) + "\" json:\"" + name + ",omitempty\"`"
-				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{const_ManyToOne, name, childName})
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{const_ManyToOne, name, childName,""})
 				g.Id(finalId)
 			case 3: //many to many
 			// add two record in relation table to create many to many or uncomment this and add relation here
+				relationName := name
+				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", "", childName,interName})
+				relationName = name + "s"
+				//finalId := relationName + " []" + name + " `gorm:\"many2many:" + relation.InterEntity.Name + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				g.Id(finalId)
+				finalInterId := interName + " []" + interName + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				g.Id(finalInterId)
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"ManyToMany", name, childName,""})
 			//fmt.Println("\t\t many to many " + relation.InterEntity.DisplayName + " for " + entityName + " from child")
 			}
 		}
@@ -736,7 +759,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 	resolverFile.Func().Id("ResolveDelete" + entityName).Params(Id("args").StructFunc(func(g *Group) {
 		g.Id("ID").Qual(const_GraphQlPath, "ID")
 		g.Id("cascadeDelete").Bool()
-	})).Params(Id("response *").Bool()).BlockFunc(func(g *Group) {
+	})).Params(Id("response *").Int()).BlockFunc(func(g *Group) {
 
 		g.If(Id("args").Op(".").Id("cascadeDelete").Op("==").Lit("")).BlockFunc(func(h *Group) {
 			h.Id("args").Op(".").Id("cascadeDelete").Op("=").False()
@@ -746,14 +769,19 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		resolverFile.Empty()
 
 		g.Var().Id("del").Bool()
-		g.If(Id("len").Call(Id("models." + entityName + "Children")).Op("==").Lit(0)).Block(
+		g.Var().Id("count").Int()
+
+		g.If(Id("len").Call(Id("models." + entityName + "Children")).Op("==").Lit(0).Op("&&").Id("len").Call(Id("models." + entityName + "InterRelation")).Op("==").Lit(0)).Block(
 			Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 				Qual(const_UtilsPath, const_UtilsConvertId).Call(
 					Id("args.ID"),
 				),
 				//Id("args.cascadeDelete"),
 			),
-			Id("response").Op("=").Id("&del"),
+			If().Id("del").Op("==").True().Block(
+				Id("count++"),
+			),
+			Id("response").Op("=").Id("&count"),
 
 			Return(Id("response")),
 		)
@@ -762,21 +790,49 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			For(Id("_,v:=").Range().Id("models." + entityName + "Children")).Block(
 				//Id("temp").Op(":=").Lit("Map").Id("+v"),
 
-				Id("temp1").Op(":=").Lit("models.Delete").Id("+v"),
+				//Id("temp1").Op(":=").Lit("models.Delete").Id("+v"),
+				Id("temp2").Op(":=").Lit("ResolveDelete").Id("+v"),
 				Qual(const_DatabasePath, "SQL.Model").Call(Id("models."+entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
 
 				Id("delId").Op(":=").Lit("data.").Id("+ v +").Lit(".id"),
 
-				Id("del").Op("=").Id("temp1").Call(
-					Qual(const_UtilsPath, const_UtilsConvertId).Call(
-						Id("delId"),
-					),
-					//Id("args.cascadeDelete"),
+				//Id("del").Op("=").Id("temp1").Call(                            //delete child from model
+				//	Qual(const_UtilsPath, const_UtilsConvertId).Call(
+				//		Id("delId"),
+				//	),
+				//	//Id("args.cascadeDelete"),
+				//),
+				For(Id("_,v1:=").Range().Id("delId")).Block(
+
+					If(Id("v1").Op("!=").Nil()).Block(
+						Id("count++"),
+
+						Id("args.ID").Op("=").Id("v1"),
+				Id("temp2").Call(Id("args")),
+				//Id("response").Op("=").Id("count"),
 				),
-				Id("response").Op("=").Id("&del"),
-
-
+				),
 			),
+
+				For(Id("_,v:=").Range().Id("models." + entityName + "InterRelation")).Block(
+					//Id("temp").Op(":=").Lit("Map").Id("+v"),
+
+					Id("temp1").Op(":=").Lit("ResolveDelete").Id("+v"),
+					Qual(const_DatabasePath, "SQL.Model").Call(Id("models."+entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
+
+					Id("delId").Op(":=").Lit("data.").Id("+ v +").Lit(".id"),
+					For(Id("_,v1:=").Range().Id("delId")).Block(
+
+						If(Id("v1").Op("!=").Nil()).Block(
+							Id("count++"),
+
+							Id("args.ID").Op("=").Id("v1"),
+							Id("temp1").Call(Id("args")),
+							//Id("response").Op("=").Id("count"),
+						),
+					),
+
+				),
 
 			//If(Id("del").Op("==").True()).Block(
 
@@ -786,9 +842,10 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 					),
 					//Id("args.cascadeDelete"),
 				),
-				Id("response").Op("=").Id("&del"),
+				Id("count++"),
+				Id("response").Op("=").Id("&count"),
 
-				Return(Id("response")),
+				Return(Id("response").Op("+1")),
 			//),
 			//	Else().Block(
 			//	Id("del").Op("=").False(),
@@ -809,7 +866,14 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			),
 
 		)
+		g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "InterRelation")).Block(
+			Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
+			Id("temp").Op(":=").Lit("data.+v"),
+			If(Id("temp").Op("==").Lit("")).Block(
+				Id("flag=1"),
+			),
 
+		)
 		g.If(Id("flag").Op("==").Lit(1)).Block(
 			Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 				Qual(const_UtilsPath, const_UtilsConvertId).Call(
@@ -817,13 +881,14 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 				),
 				//Id("args.cascadeDelete"),
 			),
-			Id("response").Op("=").Id("&del"),
+			Id("count++"),
+			Id("response").Op("=").Id("&count"),
 
 
 		).Else().Block(
 			                Comment("show error"),
 					Id("del").Op("=").False(),
-					Id("response").Op("=").Id("&del"),
+					Id("response").Op("=").Id("&count"),
 				)
 
 		g.Return(Id("response"))
@@ -894,13 +959,36 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 func createEntitiesChildSlice(modelFile *File, entityName string, entityRelationsForAllEndpoint []EntityRelation) {
 	allChildren := []string{}
 	for _, value := range entityRelationsForAllEndpoint {
-		allChildren = append(allChildren, value.SubEntityName)
+		if value.SubEntityName!="" {
+			allChildren = append(allChildren, value.SubEntityName)
+		}
 		//fmt.Println("sub :",value.SubEntityName)
 	}
 
 	modelFile.Empty()
 	modelFile.Comment("Child entities")
 	modelFile.Var().Id(entityName + "Children").Op("=").Lit(allChildren)
+
+	allInterRelation := []string{}
+	var flag int
+	for _, value := range entityRelationsForAllEndpoint {
+		if value.InterEntityName!=""{
+			for _,val:=range allInterRelation{
+				if val == value.InterEntityName{
+					flag=1
+				}
+			}
+			if flag!=1{
+				allInterRelation = append(allInterRelation, value.InterEntityName)
+			}
+		}
+		fmt.Println("sub :",value.InterEntityName)
+	}
+
+	modelFile.Empty()
+	modelFile.Comment("Inter entities")
+	modelFile.Var().Id(entityName + "InterRelation").Op("=").Lit(allInterRelation)
+
 }
 
 func createEntitiesGetAllMethod(modelFile *File, entityName string, methodName string, controllerFile *File) {
