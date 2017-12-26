@@ -479,8 +479,8 @@ func createEntities(entity Entity, db *gorm.DB) string {
 			if entityName == name {
 				d = "*" //if name and entityName are same, its a self join, so add *
 				relType = "_self"
-			}  
-
+			}
+//comment
 			switch relation.RelationTypeID {
 			case 1: //one to one
 				relationName := name
