@@ -137,12 +137,13 @@ func GenerateCode(appName string) {
 	database.SQL.Preload("Columns.ColumnType").
 		Find(&entities)
 
+
 	//print all entities
-	//for _, entity := range entities {
-	//	fmt.Print(entity.Name + " (" + entity.DisplayName + ")\n")
-	//	for _, col := range entity.Columns {
-	//		fmt.Print("\t", col.Name, " ", col.ColumnType.Type, "(", col.Size, ")\n")
-	//	}
+	//for _, entity := range entitie {
+	//	fmt.Println("dsfsd :",entity.ChildEntity.Name , "    ", entity.ParentEntity.Name)
+	//	//for _, col := range entity.Columns {
+	//	//	fmt.Print("\t", col.Name, " ", col.ColumnType.Type, "(", col.Size, ")\n")
+	//	//}
 	//}
 
 	allModels := make([]string, 0)
@@ -389,6 +390,11 @@ func createEntities(entity Entity, db *gorm.DB) string {
 	// create entity name from table
 	entityName := snakeCaseToCamelCase(entity.DisplayName)
 
+	//childEntity := []Relation{}
+	//database.SQL.Preload("ChildEntity").Preload("InterEntity").
+	//	Preload("ParentEntity").Where("parent_entity_id=(?)",entity.ID).
+	//	Find(&childEntity)
+
 	//entity relations stored to generate routes and their methods for each sub entities ((parent to child) and (child to parent))
 	entityRelationsForEachEndpoint := []EntityRelation{}
 
@@ -467,7 +473,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 
 			childName := string(relation.ChildColumn.Name)
 			parentName := string(relation.ParentColumn.Name)
-
+                   //    fmt.Println("entity name :",entityName,"inter :",interEntity)
 			d := " "
 			relType := "_normal"
 			if entityName == name {
@@ -480,11 +486,11 @@ func createEntities(entity Entity, db *gorm.DB) string {
 				relationName := name
 				finalId := relationName + " " + d + name + " `gorm:\"ForeignKey:" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + ",omitempty\"`"
 				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName, InterEntity{}})
-				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToOne" + relType, relationName, childName, InterEntity{}})
+				//entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToOne" + relType, relationName, childName, InterEntity{}})
 				g.Id(finalId)
 			case 2: //one to many
 				relationName := name
-				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", relationName, childName, InterEntity{}})
+				//entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", relationName, childName, InterEntity{}})
 				relationName = name + "s"
 				finalId := relationName + " []" + name + " `gorm:\"ForeignKey:" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
 				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToMany", name, childName, InterEntity{}})
@@ -512,7 +518,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 
 			name := snakeCaseToCamelCase(relation.ParentEntity.DisplayName)
 			childName := string(relation.ChildColumn.Name)
-
+		//	fmt.Println("entity child name :",entityName,"inter :",interEntity)
 			switch relation.RelationTypeID {
 			case 1: //ont to one
 				// means current entity's one item belongs to
@@ -612,7 +618,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 	})
 
 	//write resolver
-	createEntitiesResolver(resolverFile, entityName, entity)
+	createEntitiesResolver(resolverFile, entityName, entity, entityRelationsForAllEndpoint)
 
 	createEntitiesChildSlice(modelFile, entityName, entityRelationsForAllEndpoint)
 
@@ -712,7 +718,73 @@ func createEntities(entity Entity, db *gorm.DB) string {
 	return entityName
 }
 
-func createEntitiesResolver(resolverFile *File, entityName string, entity Entity) {
+/*func m2mdel(resolverFile *File, entityName string,entity Entity,entityRelationsForAllEndpoint []EntityRelation){
+	var allInterRelation []string
+	var flag int
+	for _, entity := range entityRelationsForAllEndpoint {
+		for _,v:=range allInterRelation{
+			if entity.InterEntity.StructName==v{
+				flag=1
+			}
+
+		}
+
+		if flag!=1{
+			allInterRelation=append(allInterRelation,entity.InterEntity.StructName)
+		}
+
+	}
+	fmt.Println("dsfsd :",allInterRelation)
+
+	if allInterRelation!=nil{
+
+		For(Id("_,v:=").Range().Id("models." + entityName + "InterRelation")).Block(
+				//Id("temp").Op(":=").Lit("Map").Id("+v"),
+				//Var().Id("interData models."+allInterRelation),
+				//Id("dataType").Op(":=").Lit("[]models.").Id("+v.StructName"),
+                               // Var().Id("interData").Id("dataType"),
+				Id("temp1").Op(":=").Lit("ResolveDelete").Id("+v.StructName"),
+			//	Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
+				Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings","TrimPrefix").Call(Id("data.TableName()"),Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings","TrimPrefix").Call(Id("data.TableName()"),Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"),Id("args.ID")).Dot("Find").Call(Id("&interData")),
+
+				Id("delId").Op(":=").Id("interData"),
+				For(Id("_,v1:=").Range().Id("delId")).Block(
+
+					If(Id("v1").Op("!=").Nil()).Block(
+						Id("count++"),
+
+						Id("args.ID").Op("=").Id("v1.Id"),
+						Id("temp1").Call(Id("args")),
+						//Id("response").Op("=").Id("count"),
+					),
+				),
+
+			)
+
+	}
+
+}*/
+
+func createEntitiesResolver(resolverFile *File, entityName string, entity Entity, entityRelationsForAllEndpoint []EntityRelation) {
+
+	var allInterRelation []string
+	//fmt.Println("test",len(allInterRelation))
+	var flag int
+	for _, entity := range entityRelationsForAllEndpoint {
+		for _, v := range allInterRelation {
+			if entity.InterEntity.StructName == v {
+				flag = 1
+			}
+
+		}
+
+		if flag != 1 {
+			allInterRelation = append(allInterRelation, entity.InterEntity.StructName)
+		}
+
+	}
+//	fmt.Println("dsfsd :", allInterRelation)
+
 	entityNameLower := strings.ToLower(entityName)
 	resolverFile.Comment("Struct for graphql")
 	resolverFile.Type().Id(entityNameLower).StructFunc(func(g *Group) {
@@ -771,6 +843,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 	resolverFile.Comment("For Delete")
 	resolverFile.Func().Id("ResolveDelete" + entityName).Params(Id("args").StructFunc(func(g *Group) {
+
 		g.Id("ID").Qual(const_GraphQlPath, "ID")
 		g.Id("cascadeDelete").Bool()
 	})).Params(Id("response *").Int()).BlockFunc(func(g *Group) {
@@ -799,9 +872,10 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 			Return(Id("response")),
 		)
-		g.If(Id("args.cascadeDelete").Op("==").True()).Block(
-			Var().Id("data models." + entityName),
-			For(Id("_,v:=").Range().Id("models." + entityName + "Children")).Block(
+		g.If(Id("args.cascadeDelete").Op("==").True()).BlockFunc(func(h *Group) {
+			h.Var().Id("data models." + entityName)
+
+			h.For(Id("_,v:=").Range().Id("models." + entityName + "Children")).Block(
 				//Id("temp").Op(":=").Lit("Map").Id("+v"),
 
 				//Id("temp1").Op(":=").Lit("models.Delete").Id("+v"),
@@ -826,41 +900,47 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 						//Id("response").Op("=").Id("count"),
 					),
 				),
-			),
+			)
+			fmt.Println("len :",entityName,len(allInterRelation),"inter :",allInterRelation)
 
-			For(Id("_,v:=").Range().Id("models." + entityName + "InterRelation")).Block(
-				//Id("temp").Op(":=").Lit("Map").Id("+v"),
+				for _,v:=range allInterRelation{
+					h.For(Id("_,v:=").Range().Id("models." + entityName + "InterRelation")).Block(
+						//Id("temp").Op(":=").Lit("Map").Id("+v"),
+						Var().Id("interData []models."+v),
+						//Id("dataType").Op(":=").Lit("[]models.").Id("+v.StructName"),
+						// Var().Id("interData").Id("dataType"),
+						Id("temp1").Op(":=").Lit("ResolveDelete").Id("+v.StructName"),
+						//	Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
+						Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"), Id("args.ID")).Dot("Find").Call(Id("&interData")),
 
-				Id("temp1").Op(":=").Lit("ResolveDelete").Id("+v"),
-				Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-				Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
+						Id("delId").Op(":=").Id("interData"),
+						For(Id("_,v1:=").Range().Id("delId")).Block(
 
-				Id("delId").Op(":=").Lit("data.").Id("+ v +").Lit(".id"),
-				For(Id("_,v1:=").Range().Id("delId")).Block(
+							If(Id("v1").Op("!=").Nil()).Block(
+								Id("count++"),
 
-					If(Id("v1").Op("!=").Nil()).Block(
-						Id("count++"),
+								Id("args.ID").Op("=").Id("v1.Id"),
+								Id("temp1").Call(Id("args")),
+								//Id("response").Op("=").Id("count"),
+							),
+						),
 
-						Id("args.ID").Op("=").Id("v1"),
-						Id("temp1").Call(Id("args")),
-						//Id("response").Op("=").Id("count"),
-					),
-				),
+					)
+				}
 
-			),
 
 			//If(Id("del").Op("==").True()).Block(
 
-			Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
+			h.Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 				Qual(const_UtilsPath, const_UtilsConvertId).Call(
 					Id("args.ID"),
 				),
 				//Id("args.cascadeDelete"),
-			),
-			Id("count++"),
-			Id("response").Op("=").Id("&count"),
+			)
+			h.Id("count++")
+			h.Id("response").Op("=").Id("&count")
 
-			Return(Id("response").Op("+1")),
+			h.Return(Id("response").Op("+1"))
 			//),
 			//	Else().Block(
 			//	Id("del").Op("=").False(),
@@ -868,27 +948,35 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			//	Return(Id("response")),
 			//),
 
-		)
+		})
 
 		g.Var().Id("flag").Int()
 		g.Var().Id("data").Id("models." + entityName)
 
 		g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "Children")).Block(
 			Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-			Id("temp").Op(":=").Lit("data.+v"),
+			Id("temp").Op(":=").Lit("data.").Id("+v"),
 			If(Id("temp").Op("==").Lit("")).Block(
 				Id("flag=1"),
 			),
 
 		)
-		g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "InterRelation")).Block(
-			Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-			Id("temp").Op(":=").Lit("data.+v"),
-			If(Id("temp").Op("==").Lit("")).Block(
-				Id("flag=1"),
-			),
 
-		)
+		for _,v:=range allInterRelation {
+
+			g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "InterRelation")).Block(
+				Var().Id("interData []models."+v),
+
+				//Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
+				Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"), Id("args.ID")).Dot("Find").Call(Id("&interData")),
+
+				//Id("temp").Op(":=").Lit("data.+v"),
+				If(Id("len(interData)").Op("==").Lit(0)).Block(
+					Id("flag=1"),
+				),
+
+			)
+		}
 		g.If(Id("flag").Op("==").Lit(1)).Block(
 			Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 				Qual(const_UtilsPath, const_UtilsConvertId).Call(
@@ -993,19 +1081,19 @@ func createEntitiesChildSlice(modelFile *File, entityName string, entityRelation
 	modelFile.Var().Id(entityName + "InterRelation").Op("= []").Qual(const_GeneratorPath, "InterEntity").Op("{")
 	for _, value := range entityRelationsForAllEndpoint {
 
-		for _,v:=range allInterRelation{
-			if value.InterEntity.StructName==v{
-				flag=1
+		for _, v := range allInterRelation {
+			if value.InterEntity.StructName == v {
+				flag = 1
 			}
 
 		}
 
-		if flag!=1{
+		if flag != 1 {
 			modelFile.Qual(const_GeneratorPath, "InterEntity").Block(
 				Lit(value.InterEntity).Id(","),
 			).Id(",")
 		}
-		allInterRelation=append(allInterRelation,value.InterEntity.StructName)
+		allInterRelation = append(allInterRelation, value.InterEntity.StructName)
 
 		//if value.InterEntity.StructName != "" {
 		//	for _, val := range allInterRelation {

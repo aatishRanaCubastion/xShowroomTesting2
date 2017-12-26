@@ -3,8 +3,8 @@
     "Type": "MySQL",
     "MySQL": {
       "Username": "root",
-      "Password": "",
-      "Name": "SampleApp",
+      "Password": "password",
+      "Name": "sampleapp",
       "Hostname": "127.0.0.1",
       "Port": 3306,
       "Parameter": "?parseTime=true"
