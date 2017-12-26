@@ -9,9 +9,12 @@ import (
 	"config"
 )
 
+
+
 var con = &config.Configuration{}
 
 func main() {
+
 	// Get flag -s(sample data)
 	includeSample := flag.Bool("s", false, "a bool")
 	flag.Parse()
@@ -79,6 +82,7 @@ func upsertSampleData() {
 
 		parent := generator.Entity{}
 		child := generator.Entity{}
+		inter:=generator.Entity{}
 		parentField := generator.Column{}
 		childField := generator.Column{}
 
@@ -95,12 +99,20 @@ func upsertSampleData() {
 		if parentFieldErr != nil || childFieldErr != nil {
 			return
 		}
+		interId:=0
+		if val.Pivot != ""{
+			interErr:=database.SQL.First(&inter,"name=(?)",val.Pivot).Error
+			if interErr ==  nil {
+				interId = inter.ID
+			}
+		}
 
 		relation := generator.Relation{
 			ParentEntityID:    parent.ID,
 			ParentEntityColID: parentField.ID,
 			ChildEntityID:     child.ID,
 			ChildEntityColID:  childField.ID,
+			InterEntityID:	   interId,
 			RelationTypeID:    app.Relations[k].Type,
 		}
 
@@ -116,8 +128,14 @@ func upsertRelationTypes() {
 	oneToOne := generator.RelationType{ID: 1, Name: "OneToOne"}
 	oneToMany := generator.RelationType{ID: 2, Name: "OneToMany"}
 	manyToMany := generator.RelationType{ID: 3, Name: "ManyToMany"}
+	polyOneToOne := generator.RelationType{ID: 4, Name: "PolyOneToOne"}
+	polyOneToMany := generator.RelationType{ID: 5, Name: "PolyOneToMany"}
+	polyManyToMany := generator.RelationType{ID: 6, Name: "PolyManyToMany"}
 
 	database.SQL.FirstOrCreate(&oneToOne)
 	database.SQL.FirstOrCreate(&oneToMany)
 	database.SQL.FirstOrCreate(&manyToMany)
+	database.SQL.FirstOrCreate(&polyOneToOne)
+	database.SQL.FirstOrCreate(&polyOneToMany)
+	database.SQL.FirstOrCreate(&polyManyToMany)
 }
