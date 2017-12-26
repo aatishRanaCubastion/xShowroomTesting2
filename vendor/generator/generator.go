@@ -310,7 +310,7 @@ func createResolver(resolverFile *File, allModels []string) {
 }
 
 func createSchema(schemaFile *File, allEntities []Entity) {
-
+ 
 	sS := ""
 	//write root schema
 	u.SAppend(&sS, "\n")
