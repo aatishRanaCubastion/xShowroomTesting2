@@ -379,7 +379,7 @@ func createSchema(schemaFile *File, allEntities []Entity) {
 			u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "!\n")
 		}
 		u.SAppend(&sS, "}\n\n")
-	}
+	} 
 
 	schemaFile.Var().Id("Schema").Op("=").Id("`" + sS + "`")
 }
