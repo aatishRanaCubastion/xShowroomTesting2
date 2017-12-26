@@ -88,12 +88,12 @@ type Relation struct {
 	InterEntityID     int `sql:"type:int(100)" gorm:"unique_index:idx_all_relation"`
 	RelationTypeID    int `sql:"type:int(10)" gorm:"unique_index:idx_all_relation"`
 
-	ParentEntity Entity `gorm:"ForeignKey:ParentEntityID"`       //belong to
-	ChildEntity  Entity `gorm:"ForeignKey:ChildEntityID"`        //belong to
-	InterEntity  Entity `gorm:"ForeignKey:InterEntityID"`        //belong to
-	ParentColumn Column `gorm:"ForeignKey:ParentEntityColID"`    //belong to
-	ChildColumn  Column `gorm:"ForeignKey:ChildEntityColID"`     //belong to
-	RelationType RelationType `gorm:"ForeignKey:RelationTypeID"` //belong to
+	ParentEntity      Entity `gorm:"ForeignKey:ParentEntityID"`       //belong to
+	ChildEntity       Entity `gorm:"ForeignKey:ChildEntityID"`        //belong to
+	InterEntity       Entity `gorm:"ForeignKey:InterEntityID"`        //belong to
+	ParentColumn      Column `gorm:"ForeignKey:ParentEntityColID"`    //belong to
+	ChildColumn       Column `gorm:"ForeignKey:ChildEntityColID"`     //belong to
+	RelationType      RelationType `gorm:"ForeignKey:RelationTypeID"` //belong to
 }
 
 func (Entity) TableName() string {
@@ -175,7 +175,7 @@ func GenerateCode(appName string) {
 	defer fileSchema.Close()
 	//created file
 	appSchema := NewFile(const_MyGraphQlPath)
-	createSchema(appSchema, entities,database.SQL)
+	createSchema(appSchema, entities, database.SQL)
 
 	//create appName.go
 	fileMain, err := os.Create(appName + ".go")
@@ -255,7 +255,7 @@ func createAppMainMainMethod(appMain *File, allModels []string) {
 		Comment("Auto migrate all models"),
 		Qual(const_DatabasePath, "SQL.AutoMigrate").CallFunc(func(g *Group) {
 			for _, value := range allModels {
-				g.Id("&").Qual(const_ModelsPath, value+"{}")
+				g.Id("&").Qual(const_ModelsPath, value + "{}")
 			}
 		}),
 
@@ -275,7 +275,7 @@ func createResolver(resolverFile *File, allModels []string) {
 	resolverFile.Type().Id("Resolver").Struct()
 
 	for _, val := range allModels {
-
+		valLower := strings.ToLower(val)
 		//writing root query resolvers
 		resolverFile.Empty()
 		resolverFile.Comment("query resolver for " + val)
@@ -283,7 +283,7 @@ func createResolver(resolverFile *File, allModels []string) {
 			g.Id("ID").Qual(const_GraphQlPath, "ID")
 		})).Params(Id("[] *" + strings.ToLower(val) + "Resolver")).
 			BlockFunc(func(g *Group) {
-			g.Return(Qual("", "Resolve"+val)).Call(Id("args"))
+			g.Return(Qual("", "Resolve" + val)).Call(Id("args"))
 		})
 
 		// uncomment when create and delete resolvers are done
@@ -291,11 +291,11 @@ func createResolver(resolverFile *File, allModels []string) {
 		//writing root mutation resolvers
 		resolverFile.Empty()
 		resolverFile.Comment("create resolver for " + val)
-		resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Create"+val).Params(Id("args").StructFunc(func(g *Group) {
-			g.Id("ID").Qual(const_GraphQlPath, "ID")
+		resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Create" + val).Params(Id("args").Id("*").StructFunc(func(g *Group) {
+			g.Id(val).Id("*" + valLower + "Input")
 		})).Params(Id("*" + strings.ToLower(val) + "Resolver")).
 			BlockFunc(func(g *Group) {
-			g.Return(Qual("", "ResolveCreate"+val)).Call(Id("args"))
+			g.Return(Qual("", "ResolveCreate" + val)).Call(Id("args"))
 		})
 
 		////writing root mutation resolvers
@@ -311,7 +311,7 @@ func createResolver(resolverFile *File, allModels []string) {
 	}
 }
 
-func createSchema(schemaFile *File, allEntities []Entity,db *gorm.DB) {
+func createSchema(schemaFile *File, allEntities []Entity, db *gorm.DB) {
 
 	sS := ""
 	//write root schema
@@ -327,45 +327,42 @@ func createSchema(schemaFile *File, allEntities []Entity,db *gorm.DB) {
 	for _, val := range allEntities {
 		entityNameLower := strings.ToLower(val.DisplayName)
 		entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
-		u.SAppend(&sS, "\t"+entityNameLower+"(id: ID!) : ["+entityNameCaps+"]!\n")
+		u.SAppend(&sS, "\t" + entityNameLower + "(id: ID!) : [" + entityNameCaps + "]!\n")
 	}
 	u.SAppend(&sS, "}\n\n")
 
 	//uncomment when mutation resolvers are done
 
-	////write mutation schema
-	//u.SAppend(&sS, "# The mutation type, represents all updates we can make to our data\n")
-	//u.SAppend(&sS, "type Mutation {\n")
-	//for _, val := range allEntities {
-	//	entityNameLower := strings.ToLower(val.DisplayName)
-	//	entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
-	//	u.SAppend(&sS, "\tcreate"+entityNameCaps+"("+entityNameLower+": "+entityNameCaps+"Input!) : ["+entityNameCaps+"]!\n")
-	//}
-	//u.SAppend(&sS, "}\n\n")
+	//write mutation schema
+	u.SAppend(&sS, "# The mutation type, represents all updates we can make to our data\n")
+	u.SAppend(&sS, "type Mutation {\n")
+	for _, val := range allEntities {
+		entityNameLower := strings.ToLower(val.DisplayName)
+		entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
+		u.SAppend(&sS, "\tupsert" + entityNameCaps + "(" + entityNameLower + ": " + entityNameCaps + "Input!) :" + entityNameCaps + "\n")
+	}
+	u.SAppend(&sS, "}\n\n")
 	var relationParent = []Relation{}
 	var relationChild = []Relation{}
-
-
-
 
 	for _, val := range allEntities {
 		db.Preload("InterEntity").
 			Preload("ChildEntity").
 			Preload("ChildColumn").
 			Preload("ParentColumn").
-			Where("parent_entity_id=?",val.ID).
+			Where("parent_entity_id=?", val.ID).
 			Find(&relationParent)
 		db.Preload("InterEntity").
 			Preload("ParentEntity").
 			Preload("ChildColumn").
 			Preload("ParentColumn").
-			Where("child_entity_id=?",val.ID).
+			Where("child_entity_id=?", val.ID).
 			Find(&relationChild)
 
 		//entityNameLower := strings.ToLower(val.DisplayName)
 		entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
 
-		u.SAppend(&sS, "type "+entityNameCaps+" {\n")
+		u.SAppend(&sS, "type " + entityNameCaps + " {\n")
 		for _, col := range val.Columns {
 			fieldType := "String"
 			if col.ColumnType.Type == "int" {
@@ -375,38 +372,36 @@ func createSchema(schemaFile *File, allEntities []Entity,db *gorm.DB) {
 				fieldType = "ID"
 			}
 
-			u.SAppend(&sS, "\t"+col.Name+": "+fieldType+"!\n")
+			u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "!\n")
 		}
-		for _,child:=range relationParent{
+		for _, child := range relationParent {
 
 			fieldType := child.ChildEntity.DisplayName
-			fieldTypeLower:=strings.ToLower(child.ChildEntity.DisplayName)
+			fieldTypeLower := strings.ToLower(child.ChildEntity.DisplayName)
 
-			if child.RelationTypeID == 2 || child.RelationTypeID ==3 {
-				u.SAppend(&sS, "\t" + fieldTypeLower+"s" + ": " +"["+fieldType +"!]"+ "!\n")
-			}else{
-				u.SAppend(&sS, "\t" + fieldTypeLower + ": "+fieldType + "!\n")
-
+			if child.RelationTypeID == 1 || child.RelationTypeID == 4 {
+				u.SAppend(&sS, "\t" + fieldTypeLower + ": " + fieldType + "!\n")
+			} else {
+				u.SAppend(&sS, "\t" + fieldTypeLower + "s" + ": " + "[" + fieldType + "!]" + "!\n")
 			}
 		}
 
-		for _,child:=range relationChild{
+		for _, child := range relationChild {
 
 			fieldType := child.ParentEntity.DisplayName
-			fieldTypeLower:=strings.ToLower(child.ParentEntity.DisplayName)
+			fieldTypeLower := strings.ToLower(child.ParentEntity.DisplayName)
 
-			if child.RelationTypeID ==3 {
-				u.SAppend(&sS, "\t" + fieldTypeLower+"s" + ": " +"["+fieldType +"!]"+ "!\n")
-			}else{
-				u.SAppend(&sS, "\t" + fieldTypeLower + ": "+fieldType + "!\n")
+			if child.RelationTypeID == 3 || child.RelationTypeID == 6 {
+				u.SAppend(&sS, "\t" + fieldTypeLower + "s" + ": " + "[" + fieldType + "!]" + "!\n")
+			} else {
 
+				u.SAppend(&sS, "\t" + fieldTypeLower + ": " + fieldType + "!\n")
 			}
 		}
-
 
 		u.SAppend(&sS, "}\n")
 
-		u.SAppend(&sS, "input "+entityNameCaps+"Input {\n")
+		u.SAppend(&sS, "input " + entityNameCaps + "Input {\n")
 		for _, col := range val.Columns {
 
 			fieldType := "String"
@@ -416,24 +411,32 @@ func createSchema(schemaFile *File, allEntities []Entity,db *gorm.DB) {
 			if col.Name == "id" {
 				fieldType = "ID"
 			}
+			if strings.HasSuffix(col.Name, "_id") {
+				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "\n")
 
-			u.SAppend(&sS, "\t"+col.Name+": "+fieldType+"!\n")
+			} else if strings.HasSuffix(col.Name, "_type") {
+				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "\n")
+
+			} else {
+				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "!\n")
+			}
+
 		}
-		for _,child:=range relationParent{
+		for _, child := range relationParent {
 
 			fieldType := child.ChildEntity.DisplayName
-			fieldTypeLower:=strings.ToLower(child.ChildEntity.DisplayName)
+			fieldTypeLower := strings.ToLower(child.ChildEntity.DisplayName)
 
-			if child.RelationTypeID == 2 || child.RelationTypeID ==3 {
-				u.SAppend(&sS, "\t" + fieldTypeLower+"s" + ": " +"["+fieldType +"Input!]"+ "\n")
-			}else{
-				u.SAppend(&sS, "\t" + fieldTypeLower + ": "+fieldType +"Input"+ "\n")
+			if child.RelationTypeID == 1 || child.RelationTypeID == 4 {
+				u.SAppend(&sS, "\t" + fieldTypeLower + ": " + fieldType + "Input" + "\n")
+
+			} else {
+				u.SAppend(&sS, "\t" + fieldTypeLower + "s" + ": " + "[" + fieldType + "Input!]" + "\n")
 
 			}
 		}
 		u.SAppend(&sS, "}\n\n")
 	}
-
 
 	schemaFile.Var().Id("Schema").Op("=").Id("`" + sS + "`")
 }
@@ -541,30 +544,59 @@ func createEntities(entity Entity, db *gorm.DB) string {
 				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
 				g.Id(finalId)
 				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"ManyToMany", name, childName})
+
+			case 4: // Polymorphic OnetoOne
+				relationName := name
+				finalId := relationName + " " + d + name + " `gorm:\":" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + ",omitempty\"`"
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName})
+				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToOne" + relType, relationName, childName})
+				g.Id(finalId)
+
+			case 5:        // Polymorphic OnetoMany
+				relationName := name + "s"
+				//finalId := relationName + " []" + name + " `gorm:\"many2many:" + relation.InterEntity.Name + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				g.Id(finalId)
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"ManyToMany", name, childName})
+
+			case 6:        // Polymorphic ManytoMany
+				relationName := name + "s"
+				//finalId := relationName + " []" + name + " `gorm:\"many2many:" + relation.InterEntity.Name + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				g.Id(finalId)
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"ManyToMany", name, childName})
+
 			}
+
 		}
 
 		//write composite fields while looking at child
-		for _, relation := range relationsChild {
+		/*for _, relation := range relationsChild {
 			name := snakeCaseToCamelCase(relation.ParentEntity.DisplayName)
 			childName := string(relation.ChildColumn.Name)
 
 			switch relation.RelationTypeID {
 			case 1: //ont to one
 				// means current entity's one item belongs to
+				*//*finalId := name + " " + name + " `gorm:\"ForeignKey:" + snakeCaseToCamelCase(childName) + "\" json:\"" + name + ",omitempty\"`"
 				if name != entityName { // if check to exclude self join
 					entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{const_OneToOne + const_reverse, name, childName})
 				}
+				g.Id(finalId)*//*
 			case 2: //one to many
 				// means current entity's many items belongs to
-				finalId := name + " " + name + " `gorm:\"ForeignKey:" + snakeCaseToCamelCase(childName) + "\" json:\"" + name + ",omitempty\"`"
+				*//*finalId := name + " " + name + " `gorm:\"ForeignKey:" + snakeCaseToCamelCase(childName) + "\" json:\"" + name + ",omitempty\"`"
 				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{const_ManyToOne, name, childName})
-				g.Id(finalId)
+				g.Id(finalId)*//*
 			case 3: //many to many
 				// add two record in relation table to create many to many or uncomment this and add relation here
 				//fmt.Println("\t\t many to many " + relation.InterEntity.DisplayName + " for " + entityName + " from child")
+			*//*	finalId := name + " " + "[]"+name + "` json:\"" + name + ",omitempty\"`"
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{const_ManyToMany, name, childName})
+				g.Id(finalId)*//*
+
 			}
-		}
+		}*/
 	})
 
 	//write table name method for our struct
@@ -589,11 +621,11 @@ func createEntities(entity Entity, db *gorm.DB) string {
 
 		g.Empty()
 		g.Comment("Standard routes")
-		g.Qual(const_RouterPath, "Get").Call(Lit("/"+strings.ToLower(entityName)), Id(getAllMethodName))
-		g.Qual(const_RouterPath, "Get").Call(Lit("/"+strings.ToLower(entityName)+"/:id"), Id(getByIdMethodName))
-		g.Qual(const_RouterPath, "Post").Call(Lit("/"+strings.ToLower(entityName)), Id(postMethodName))
-		g.Qual(const_RouterPath, "Put").Call(Lit("/"+strings.ToLower(entityName)+"/:id"), Id(putMethodName))
-		g.Qual(const_RouterPath, "Delete").Call(Lit("/"+strings.ToLower(entityName)+"/:id"), Id(deleteMethodName))
+		g.Qual(const_RouterPath, "Get").Call(Lit("/" + strings.ToLower(entityName)), Id(getAllMethodName))
+		g.Qual(const_RouterPath, "Get").Call(Lit("/" + strings.ToLower(entityName) + "/:id"), Id(getByIdMethodName))
+		g.Qual(const_RouterPath, "Post").Call(Lit("/" + strings.ToLower(entityName)), Id(postMethodName))
+		g.Qual(const_RouterPath, "Put").Call(Lit("/" + strings.ToLower(entityName) + "/:id"), Id(putMethodName))
+		g.Qual(const_RouterPath, "Delete").Call(Lit("/" + strings.ToLower(entityName) + "/:id"), Id(deleteMethodName))
 
 		//if len(entityRelationsForEachEndpoint) > 0 {
 		//	g.Empty()
@@ -638,7 +670,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 	})
 
 	//write resolver
-	createEntitiesResolver(resolverFile, entityName, entity,database.SQL)
+	createEntitiesResolver(resolverFile, entityName, entity, database.SQL)
 
 	createEntitiesChildSlice(modelFile, entityName, entityRelationsForAllEndpoint)
 
@@ -665,9 +697,9 @@ func createEntities(entity Entity, db *gorm.DB) string {
 					Id("0"),
 				)
 
-				if method.Type == const_OneToMany || method.Type == const_OneToOne+const_normal {
+				if method.Type == const_OneToMany || method.Type == const_OneToOne + const_normal {
 					g.Id("data").Op(":= []").Id(method.SubEntityName).Id("{}")
-					g.Qual(const_DatabasePath, "SQL.Find").Call(Id("&").Id("data"), Lit(" "+method.SubEntityColName+" = ?"), Id("ID"))
+					g.Qual(const_DatabasePath, "SQL.Find").Call(Id("&").Id("data"), Lit(" " + method.SubEntityColName + " = ?"), Id("ID"))
 					g.Qual("", "w.Header().Set").Call(Lit("Content-Type"), Lit("application/json"))
 					g.Qual("encoding/json", "NewEncoder").Call(Id("w")).Op(".").Id("Encode").Call(Id("Response").
 						Op("{").
@@ -677,7 +709,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 						Op("}"))
 				}
 
-				if method.Type == const_ManyToOne || method.Type == const_OneToOne+const_reverse {
+				if method.Type == const_ManyToOne || method.Type == const_OneToOne + const_reverse {
 					g.Id(strings.ToLower(entityName)).Op(":=").Id(entityName).Op("{").Id("Id").Op(":").Id("uint(").Id("ID").Op(")}")
 
 					g.Id("data").Op(":= ").Id(method.SubEntityName).Id("{}")
@@ -694,9 +726,9 @@ func createEntities(entity Entity, db *gorm.DB) string {
 						Op("}"))
 				}
 
-				if method.Type == const_OneToOne+const_self {
+				if method.Type == const_OneToOne + const_self {
 					g.Id("data").Op(":= ").Id(method.SubEntityName).Id("{}")
-					g.Qual(const_DatabasePath, "SQL.Find").Call(Id("&").Id("data"), Lit(" "+method.SubEntityColName+" = ?"), Id("ID"))
+					g.Qual(const_DatabasePath, "SQL.Find").Call(Id("&").Id("data"), Lit(" " + method.SubEntityColName + " = ?"), Id("ID"))
 					g.Qual("", "w.Header().Set").Call(Lit("Content-Type"), Lit("application/json"))
 					g.Qual("encoding/json", "NewEncoder").Call(Id("w")).Op(".").Id("Encode").Call(Id("Response").
 						Op("{").
@@ -755,8 +787,6 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		Where("child_entity_id=?", entity.ID).
 		Find(&parOfEntity)
 
-
-
 	entityNameLower := strings.ToLower(entityName)
 	resolverFile.Comment("Struct for graphql")
 	resolverFile.Type().Id(entityNameLower).StructFunc(func(g *Group) {
@@ -764,32 +794,30 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		for _, column := range entity.Columns {
 			mapColumnTypesResolver(column, g, false)
 		}
-		for _,child:=range childOfEntity{
+		for _, child := range childOfEntity {
 
+			fieldTypeLower := strings.ToLower(child.ChildEntity.DisplayName)
 
-			fieldTypeLower:=strings.ToLower(child.ChildEntity.DisplayName)
+			if child.RelationTypeID == 1 || child.RelationTypeID == 4 {
+				g.Id(fieldTypeLower).Id("*" + fieldTypeLower)
 
-			if child.RelationTypeID == 2 || child.RelationTypeID ==3 {
-				g.Id(fieldTypeLower+"s").Op("[]*").Id(fieldTypeLower)
-			}else{
-				g.Id(fieldTypeLower).Id("*"+fieldTypeLower)
-
-			}
-		}
-
-		for _,child:=range parOfEntity{
-
-
-			fieldTypeLower:=strings.ToLower(child.ParentEntity.DisplayName)
-
-			if child.RelationTypeID ==3 {
-				g.Id(fieldTypeLower+"s").Op("[]*").Id(fieldTypeLower)
-			}else{
-				g.Id(fieldTypeLower).Id("*"+fieldTypeLower)
+			} else {
+				g.Id(fieldTypeLower + "s").Op("[]*").Id(fieldTypeLower)
 
 			}
 		}
 
+		for _, child := range parOfEntity {
+
+			fieldTypeLower := strings.ToLower(child.ParentEntity.DisplayName)
+
+			if child.RelationTypeID == 3 || child.RelationTypeID == 6 {
+				g.Id(fieldTypeLower + "s").Op("[]*").Id(fieldTypeLower)
+			} else {
+				g.Id(fieldTypeLower).Id("*" + fieldTypeLower)
+
+			}
+		}
 
 	})
 	resolverFile.Empty()
@@ -800,15 +828,15 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			mapColumnTypesResolver(column, g, true)
 		}
 
-		for _,child:=range childOfEntity{
+		for _, child := range childOfEntity {
 			fieldType := child.ChildEntity.DisplayName
-			fieldTypeLower:=strings.ToLower(child.ChildEntity.DisplayName)
+			fieldTypeLower := strings.ToLower(child.ChildEntity.DisplayName)
 
+			if child.RelationTypeID == 1 || child.RelationTypeID == 4 {
+				g.Id(fieldType).Id("*" + fieldTypeLower + "Input")
 
-			if child.RelationTypeID == 2 || child.RelationTypeID ==3 {
-				g.Id(fieldType+"s").Op("*[]").Id(fieldTypeLower+"Input")
-			}else{
-				g.Id(fieldType).Id("*"+fieldTypeLower+"Input")
+			} else {
+				g.Id(fieldType + "s").Op("*[]").Id(fieldTypeLower + "Input")
 
 			}
 		}
@@ -826,8 +854,8 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			h.Id("response").Op("=").Qual("", "append").Call(
 				Id("response"),
 				Op("&").Id(entityNameLower + "Resolver").Values(Dict{
-					Id(entityNameLower): Qual("", "Map"+entityName).Call(
-						Qual(const_ModelsPath, "Get"+entityName).Call(
+					Id(entityNameLower): Qual("", "Map" + entityName).Call(
+						Qual(const_ModelsPath, "Get" + entityName).Call(
 							Qual(const_UtilsPath, const_UtilsConvertId).Call(
 								Id("args.ID"),
 							),
@@ -837,11 +865,11 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			)
 			h.Return(Id("response"))
 		})
-		g.For(Id("_").Op(",").Id("val").Op(":=").Id("range").Qual(const_ModelsPath, "GetAll"+entityName+"s").Call()).BlockFunc(func(h *Group) {
+		g.For(Id("_").Op(",").Id("val").Op(":=").Id("range").Qual(const_ModelsPath, "GetAll" + entityName + "s").Call()).BlockFunc(func(h *Group) {
 			h.Id("response").Op("=").Qual("", "append").Call(
 				Id("response"),
 				Op("&").Id(entityNameLower + "Resolver").Values(Dict{
-					Id(entityNameLower): Qual("", "Map"+entityName).Call(
+					Id(entityNameLower): Qual("", "Map" + entityName).Call(
 						Id("val"),
 					),
 				}),
@@ -853,97 +881,277 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 	resolverFile.Empty()
 	resolverFile.Empty()
 
-	//Create/update Resolver
+	//**************Create/update Resolver*********************
 
-	resolverFile.Func().Id("ResolveCreate"+entityName).Params(Id("args").Id("*").StructFunc(func(g *Group) {
+	resolverFile.Func().Id("ResolveCreate" + entityName).Params(Id("args").Id("*").StructFunc(func(g *Group) {
 
-		g.Id(entityName+" *").Id(entityNameLower+"Input")
+		g.Id(entityName + " *").Id(entityNameLower + "Input")
 
-
-	})).Id("*"+entityNameLower+"Resolver").BlockFunc(func(h *Group) {
-
+	})).Id("*" + entityNameLower + "Resolver").BlockFunc(func(h *Group) {
 
 		h.Var().Id(entityNameLower).Op("=").Op("&").Id(entityNameLower).Op("{}")
 		h.Empty()
 		h.If(Id("args").Dot(entityName).Dot("Id").Op("==").Nil()).Block(
 
-			Id(entityNameLower).Op("=").Id("Map"+entityName).Params(Id("models").Dot("Post"+entityName).
-				Params(Id("args").Dot(entityName))),
+			Id(entityNameLower).Op("=").Id("Map" + entityName).Params(Id("models").Dot("Post" + entityName).
+				Params(Id("ReverseMap" + entityName).Params(Id("args").Dot(entityName)))),
 
 		).Else().Block(
 
-			Id(entityNameLower).Op("=").Id("Map"+entityName).Call(Id("models").Dot("Put"+entityName).
-				Call(Id("args").Dot(entityName))),
+			Id(entityNameLower).Op("=").Id("Map" + entityName).Call(Id("models").Dot("Put" + entityName).
+				Call(Id("ReverseMap" + entityName).Params(Id("args").Dot(entityName)))),
 
 		)
 
-
-		for _,val:=range childOfEntity{
+		for _, val := range childOfEntity {
 
 			var childName = val.ChildEntity.DisplayName
 			var childNameLower = strings.ToLower(val.ChildEntity.DisplayName)
 
-
-			if val.RelationTypeID ==1{
+			if val.RelationTypeID == 1 {
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName).Op("!=").Nil()).Block(
 
 					If(Id("args").Dot(entityName).Dot(childName).Dot("Id").Op("==").Nil()).Block(
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
 
+						If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
+
+						Id(childNameLower).Dot(entityName + "Id").Op("=").Id(entityNameLower).Dot("id"),
 						Id(entityNameLower).Dot(childNameLower).Op("=").
-						Id("Map"+childName).Call(Id("models").Dot("Post"+childName).
-						Params(Id("args").Dot(entityName).Dot(childName))),
-
+							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+							Params(Id(childNameLower))),
 
 
 					).Else().Block(
 
 
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
+
+						If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
+
+						Id(childNameLower).Dot(entityName + "Id").Op("=").Id(entityNameLower).Dot("id"),
 						Id(entityNameLower).Dot(childNameLower).Op("=").
-							Id("Map"+childName).Call(Id("models").Dot("Put"+childName).
-							Params(Id("args").Dot(entityName).Dot(childName))),
+							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+							Params(Id(childNameLower))),
+
 
 					),
 
 				)
 
-			}else if val.RelationTypeID == 2 || val.RelationTypeID==3{
-
+			} else if val.RelationTypeID == 4 {
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
-					Dot(childName+"s").Op("!=").Nil()).Block(
+					Dot(childName).Op("!=").Nil()).Block(
 
-					For(Id("_ ,").Id("dev").Op(":=").Range().Id("*args").Dot(entityName).Dot(childName+"s")).Block(
+					If(Id("args").Dot(entityName).Dot(childName).Dot("Id").Op("==").Nil()).Block(
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
 
+						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
 
-
-					If(Id("dev").Dot("Id").Op("==").Nil()).Block(
-
-
-							Id("Map"+childName).Call(Id("models").Dot("Post"+childName).
-							Params(Id("args").Dot(entityName).Dot(childName+"s"))),
-
+						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+							Params(Id(childNameLower))),
 
 
 					).Else().Block(
 
 
-							Id("Map"+childName).Call(Id("models").Dot("Put"+childName).
-							Params(Id("args").Dot(entityName).Dot(childName+"s"))),
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
+
+						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
+
+						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+							Params(Id(childNameLower))),
+
 
 					),
 
-				),
+				)
+
+			} else if val.RelationTypeID == 4 {
+
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName).Op("!=").Nil()).Block(
+
+					If(Id("args").Dot(entityName).Dot(childName).Dot("Id").Op("==").Nil()).Block(
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
+
+						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
+
+						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+							Params(Id(childNameLower))),
+
+
+					).Else().Block(
+
+
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
+
+						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
+
+						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+							Params(Id(childNameLower))),
+
+
+					),
+
+				)
+
+			} else if val.RelationTypeID == 2 {
+
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName + "s").Op("!=").Nil()).Block(
+
+					For(Id("_ ,").Id("dev").Op(":=").Range().Id("*args").Dot(entityName).Dot(childName + "s")).Block(
+
+
+						If(Id("dev").Dot("Id").Op("==").Nil()).Block(
+							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+
+							If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
+								Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
+								Comment("todo throw error"),
+								Return(),
+							),
+
+							Id(childNameLower).Dot(entityName + "Id").Op("=").Id(entityNameLower).Dot("id"),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+								Params(Id(childNameLower))),
+
+
+						).Else().Block(
+
+							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+
+							If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
+								Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
+								Comment("todo throw error"),
+								Return(),
+							),
+
+							Id(childNameLower).Dot(entityName + "Id").Op("=").Id(entityNameLower).Dot("id"),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+								Params(Id(childNameLower))),
+
+						),
+
+					),
+				)
+			} else if val.RelationTypeID == 3 {
+
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName + "s").Op("!=").Nil()).Block(
+
+					For(Id("_ ,").Id("dev").Op(":=").Range().Id("*args").Dot(entityName).Dot(childName + "s")).Block(
+
+
+						If(Id("dev").Dot("Id").Op("==").Nil()).Block(
+							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+								Params(Id(childNameLower))),
+
+
+						).Else().Block(
+
+							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+								Params(Id(childNameLower))),
+
+						),
+
+					),
+				)
+			} else if val.RelationTypeID == 5 || val.RelationTypeID == 6 {
+
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName + "s").Op("!=").Nil()).Block(
+
+					For(Id("_ ,").Id("dev").Op(":=").Range().Id("*args").Dot(entityName).Dot(childName + "s")).Block(
+
+
+						If(Id("dev").Dot("Id").Op("==").Nil()).Block(
+							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+
+							If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+								Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+								Comment("todo throw error"),
+								Return(),
+							),
+
+							Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+								Params(Id(childNameLower))),
+
+
+						).Else().Block(
+
+							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+
+							If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+								Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+								Comment("todo throw error"),
+								Return(),
+							),
+
+							Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+								Params(Id(childNameLower))),
+
+						),
+
+					),
 				)
 			}
 
-
-
 		}
 
-		h.Return(Id("&"+entityNameLower+"Resolver").Op("{").Id(entityNameLower).Op("}"))
-
+		h.Return(Id("&" + entityNameLower + "Resolver").Op("{").Id(entityNameLower).Op("}"))
 
 	})
 
@@ -975,11 +1183,12 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 	resolverFile.Empty()
 	resolverFile.Comment("Mapper methods")
-	resolverFile.Func().Id("Map" + entityName).Params(Id("model" + entityName).Qual(const_ModelsPath, entityName)).Params(Id("*" + entityNameLower)).BlockFunc(func(g *Group) {
+	resolverFile.Func().Id("Map" + entityName).Params(Id("model" + entityName).
+		Qual(const_ModelsPath, entityName)).Params(Id("*" + entityNameLower)).BlockFunc(func(g *Group) {
 		g.Empty()
 
 		//g.If(Id("model" + entityName).Op("== (").Qual(const_ModelsPath, entityName).Op("{})")).BlockFunc(func(h *Group) {
-		g.If(Qual("reflect", "DeepEqual").Call(Id("model"+entityName), Qual(const_ModelsPath, entityName).Op("{}"))).BlockFunc(func(h *Group) {
+		g.If(Qual("reflect", "DeepEqual").Call(Id("model" + entityName), Qual(const_ModelsPath, entityName).Op("{}"))).BlockFunc(func(h *Group) {
 			h.Return(Op("&").Id(entityNameLower).Values())
 		})
 
@@ -1006,6 +1215,41 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			}
 		}))
 		g.Return(Id("&" + entityNameLower))
+	})
+	resolverFile.Empty()
+	resolverFile.Comment("Reverse Mapper methods")
+	resolverFile.Func().Id("ReverseMap" + entityName).Params(Id("mygraphql" + entityName).Id("*" + entityNameLower + "Input")).
+		Params(Qual(const_ModelsPath, entityName)).BlockFunc(func(g *Group) {
+		g.Empty()
+
+		//g.If(Id("model" + entityName).Op("== (").Qual(const_ModelsPath, entityName).Op("{})")).BlockFunc(func(h *Group) {
+		g.If(Qual("reflect", "DeepEqual").Call(Id("mygraphql" + entityName), Id(entityNameLower + "Input").Op("{}"))).BlockFunc(func(h *Group) {
+			h.Return(Qual(const_ModelsPath, entityName).Values())
+		})
+
+		g.Empty()
+		g.Comment("Create graphql " + entityNameLower + " from " + const_ModelsPath + " " + entityName)
+		g.Id(entityNameLower + "Model").Op(":=").Qual(const_ModelsPath, entityName).Values(DictFunc(func(d Dict) {
+			for _, column := range entity.Columns {
+
+				fieldNameCaps := snakeCaseToCamelCase(column.Name)
+
+				if column.Name == "id" {
+					//graphql.ID(strconv.Itoa(modelUser.Id)),
+					d[Id(fieldNameCaps)] = Qual("utils", "ConvertId").Params(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+					continue
+				}
+
+				if column.ColumnType.Type == "int" {
+					d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+					continue
+				}
+
+				d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+
+			}
+		}))
+		g.Return(Id(entityNameLower + "Model"))
 	})
 
 }
@@ -1217,9 +1461,15 @@ func mapColumnTypesGorm(col Column, g *Group) EntityField {
 	entityField.FieldName = col.Name
 
 	if col.ColumnType.Type == "int" {
-		entityField.FieldType = "uint"
-		finalId := snakeCaseToCamelCase(col.Name) + " uint" + " `gorm:\"column:" + col.Name + "\" json:\"" + col.Name + ",omitempty\"`"
-		g.Id(finalId)
+		if col.Name == "id" {
+			entityField.FieldType = "uint"
+			finalId := snakeCaseToCamelCase(col.Name) + " uint" + " `gorm:\"column:" + col.Name + "\" json:\"" + col.Name + ",omitempty\"`"
+			g.Id(finalId)
+		} else {
+			entityField.FieldType = "int32"
+			finalId := snakeCaseToCamelCase(col.Name) + " int32" + " `gorm:\"column:" + col.Name + "\" json:\"" + col.Name + ",omitempty\"`"
+			g.Id(finalId)
+		}
 	} else if col.ColumnType.Type == "varchar" {
 		entityField.FieldType = "string"
 		finalId := snakeCaseToCamelCase(col.Name) + " string" + " `gorm:\"column:" + col.Name + "\" json:\"" + col.Name + ",omitempty\"`"
