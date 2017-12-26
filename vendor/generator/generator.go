@@ -994,49 +994,6 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 				)
 
-			} else if val.RelationTypeID == 4 {
-
-				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
-					Dot(childName).Op("!=").Nil()).Block(
-
-					If(Id("args").Dot(entityName).Dot(childName).Dot("Id").Op("==").Nil()).Block(
-						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
-							Dot(entityName).Dot(childName)),
-
-						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
-							Comment("todo throw error"),
-							Return(),
-						),
-
-						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
-						Id(entityNameLower).Dot(childNameLower).Op("=").
-							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
-							Params(Id(childNameLower))),
-
-
-					).Else().Block(
-
-
-						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
-							Dot(entityName).Dot(childName)),
-
-						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
-							Comment("todo throw error"),
-							Return(),
-						),
-
-						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
-						Id(entityNameLower).Dot(childNameLower).Op("=").
-							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
-							Params(Id(childNameLower))),
-
-
-					),
-
-				)
-
 			} else if val.RelationTypeID == 2 {
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
