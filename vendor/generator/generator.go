@@ -879,7 +879,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 				//Id("temp").Op(":=").Lit("Map").Id("+v"),
 
 				//Id("temp1").Op(":=").Lit("models.Delete").Id("+v"),
-				Id("temp2").Op(":=").Lit("ResolveDelete").Id("+v"),
+				Id("ResolveDeleteEntity").Op(":=").Lit("ResolveDelete").Id("+v"),
 				Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
 
 				Id("delId").Op(":=").Lit("data.").Id("+ v +").Lit(".id"),
@@ -896,7 +896,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 						Id("count++"),
 
 						Id("args.ID").Op("=").Id("v1"),
-						Id("temp2").Call(Id("args")),
+						Id("ResolveDeleteEntity").Call(Id("args")),
 						//Id("response").Op("=").Id("count"),
 					),
 				),
@@ -909,7 +909,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 						Var().Id("interData []models."+v),
 						//Id("dataType").Op(":=").Lit("[]models.").Id("+v.StructName"),
 						// Var().Id("interData").Id("dataType"),
-						Id("temp1").Op(":=").Lit("ResolveDelete").Id("+v.StructName"),
+						Id("ResolveDeleteInterTable").Op(":=").Lit("ResolveDelete").Id("+v.StructName"),
 						//	Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
 						Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"), Id("args.ID")).Dot("Find").Call(Id("&interData")),
 
@@ -920,7 +920,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 								Id("count++"),
 
 								Id("args.ID").Op("=").Id("v1.Id"),
-								Id("temp1").Call(Id("args")),
+								Id("ResolveDeleteInterTable").Call(Id("args")),
 								//Id("response").Op("=").Id("count"),
 							),
 						),
@@ -955,8 +955,8 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 		g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "Children")).Block(
 			Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-			Id("temp").Op(":=").Lit("data.").Id("+v"),
-			If(Id("temp").Op("==").Lit("")).Block(
+			Id("childEntity").Op(":=").Lit("data.").Id("+v"),
+			If(Id("childEntity").Op("==").Lit("")).Block(
 				Id("flag=1"),
 			),
 
