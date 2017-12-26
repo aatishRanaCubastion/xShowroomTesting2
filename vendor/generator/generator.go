@@ -121,14 +121,14 @@ type EntityRelation struct {
 	Type             string
 	SubEntityName    string
 	SubEntityColName string
-	//InterEntity      InterEntity
+	InterEntity      InterEntity
 	//InterEntityDispName  string
 }
 
-//type InterEntity struct {
-//	TableName  string
-//	StructName string
-//}
+type InterEntity struct {
+	TableName  string
+	StructName string
+}
 
 type EntityRelationMethod struct {
 	MethodName       string
@@ -551,7 +551,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 			case 1: //one to one
 				relationName := name
 				finalId := relationName + " " + d + name + " `gorm:\"ForeignKey:" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + ",omitempty\"`"
-				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName})
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName, InterEntity{}})
 				//entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToOne" + relType, relationName, childName, InterEntity{}})
 				g.Id(finalId)
 			case 2: //one to many
@@ -1017,6 +1017,92 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 				)
 
+			} else if val.RelationTypeID == 4 {
+
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName).Op("!=").Nil()).Block(
+
+					If(Id("args").Dot(entityName).Dot(childName).Dot("Id").Op("==").Nil()).Block(
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
+
+						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
+
+						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+							Params(Id(childNameLower))),
+
+
+					).Else().Block(
+
+
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
+
+						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
+
+						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+							Params(Id(childNameLower))),
+
+
+					),
+
+				)
+
+			} else if val.RelationTypeID == 4 {
+
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName).Op("!=").Nil()).Block(
+
+					If(Id("args").Dot(entityName).Dot(childName).Dot("Id").Op("==").Nil()).Block(
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
+
+						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
+
+						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+							Params(Id(childNameLower))),
+
+
+					).Else().Block(
+
+
+						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
+							Dot(entityName).Dot(childName)),
+
+						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Comment("todo throw error"),
+							Return(),
+						),
+
+						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
+						Id(entityNameLower).Dot(childNameLower).Op("=").
+							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+							Params(Id(childNameLower))),
+
+
+					),
+
+				)
+
 			} else if val.RelationTypeID == 2 {
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
@@ -1244,7 +1330,7 @@ func createEntitiesChildSlice(modelFile *File, entityName string, entityRelation
 	modelFile.Comment("Child entities")
 	modelFile.Var().Id(entityName + "Children").Op("=").Lit(allChildren)
 
-	/*allInterRelation := []string{}
+	allInterRelation := []string{}
 
 	var flag int
 
@@ -1279,7 +1365,7 @@ func createEntitiesChildSlice(modelFile *File, entityName string, entityRelation
 		//}
 		//fmt.Println("sub :", value.InterEntity)
 	}
-	modelFile.Op("}")*/
+	modelFile.Op("}")
 
 
 	//modelFile.Var().Id(entityName + "InterRelation").Op("=").Lit(allInterRelation)
