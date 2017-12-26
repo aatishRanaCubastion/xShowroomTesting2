@@ -4,7 +4,7 @@
     "MySQL": {
       "Username": "root",
       "Password": "password",
-      "Name": "sampleapp",
+      "Name": "SampleApp",
       "Hostname": "127.0.0.1",
       "Port": 3306,
       "Parameter": "?parseTime=true"
@@ -113,14 +113,8 @@
             "Size": 30
           },
           {
-            "Name": "lead_type",
-            "DisplayName": "LeadType",
-            "Type": 2,
-            "Size": 30
-          },
-          {
-            "Name": "type_id",
-            "DisplayName": "TypeId",
+            "Name": "account_id",
+            "DisplayName": "AccountId",
             "Type": 1,
             "Size": 30
           }
@@ -163,8 +157,38 @@
         ]
       },
       {
-        "Name": "x_unrelated_product_group",
-        "DisplayName": "UnrelatedProductGroup",
+        "Name": "x_phone",
+        "DisplayName": "Phone",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "phone_number",
+            "DisplayName": "PhoneNumber",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "type_id",
+            "DisplayName": "TypeId",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "phone_type",
+            "DisplayName": "PhoneType",
+            "Type": 2,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "x_sale",
+        "DisplayName": "Sale",
         "Fields": [
           {
             "Name": "id",
@@ -175,6 +199,42 @@
           {
             "Name": "name",
             "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "type_id",
+            "DisplayName": "TypeId",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "sale_type",
+            "DisplayName": "SaleType",
+            "Type": 2,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "x_profile",
+        "DisplayName": "Profile",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "place",
+            "DisplayName": "Place",
             "Type": 2,
             "Size": 30
           }
@@ -197,14 +257,38 @@
             "Size": 30
           },
           {
-            "Name": "group_id",
-            "DisplayName": "GroupId",
+            "Name": "rel_prod_id",
+            "DisplayName": "RelProdId",
+            "Type": 1,
+            "Size": 30
+          }
+        ]
+      },
+      {
+        "Name": "x_product_sale_phone",
+        "DisplayName": "ProductSalePhone",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
             "Type": 1,
             "Size": 30
           },
           {
-            "Name": "group_type",
-            "DisplayName": "GroupType",
+            "Name": "sale_id",
+            "DisplayName": "SaleId",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "type_id",
+            "DisplayName": "TypeId",
+            "Type": 1,
+            "Size": 30
+          },
+          {
+            "Name": "sale_type",
+            "DisplayName": "SaleType",
             "Type": 2,
             "Size": 30
           }
@@ -221,18 +305,10 @@
         "Type": 1
       },
       {
-        "ParentEntity": "x_user",
-        "ParentEntityField": "id",
-        "ChildEntity": "x_lead",
-        "ChildEntityField": "type_id",
-        "Pivot": "",
-        "Type": 2
-      },
-      {
         "ParentEntity": "x_account",
         "ParentEntityField": "id",
         "ChildEntity": "x_lead",
-        "ChildEntityField": "type_id",
+        "ChildEntityField": "account_id",
         "Pivot": "",
         "Type": 2
       },
@@ -245,12 +321,52 @@
         "Type": 3
       },
       {
+        "ParentEntity": "x_user",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_phone",
+        "ChildEntityField": "type_id",
+        "Pivot": "",
+        "Type": 4
+      },
+      {
+        "ParentEntity": "x_account",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_phone",
+        "ChildEntityField": "type_id",
+        "Pivot": "",
+        "Type": 4
+      },
+      {
+        "ParentEntity": "x_account",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_sale",
+        "ChildEntityField": "type_id",
+        "Pivot": "",
+        "Type": 5
+      },
+      {
+        "ParentEntity": "x_profile",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_sale",
+        "ChildEntityField": "type_id",
+        "Pivot": "",
+        "Type": 5
+      },
+      {
         "ParentEntity": "x_product",
         "ParentEntityField": "id",
-        "ChildEntity": "x_unrelated_product_group",
+        "ChildEntity": "x_sale",
         "ChildEntityField": "id",
-        "Pivot": "x_product_product_group",
-        "Type": 3
+        "Pivot": "x_product_sale_phone",
+        "Type": 6
+      },
+      {
+        "ParentEntity": "x_phone",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_sale",
+        "ChildEntityField": "id",
+        "Pivot": "x_product_sale_phone",
+        "Type": 6
       }
     ],
     "FieldTypes": [
