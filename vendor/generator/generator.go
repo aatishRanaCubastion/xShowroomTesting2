@@ -121,14 +121,14 @@ type EntityRelation struct {
 	Type             string
 	SubEntityName    string
 	SubEntityColName string
-	InterEntity      InterEntity
+	//InterEntity      InterEntity
 	//InterEntityDispName  string
 }
 
-type InterEntity struct {
-	TableName  string
-	StructName string
-}
+//type InterEntity struct {
+//	TableName  string
+//	StructName string
+//}
 
 type EntityRelationMethod struct {
 	MethodName       string
@@ -533,10 +533,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 
 		//write composite fields while looking at parent
 		for _, relation := range relationsParent {
-			interName := relation.InterEntity.Name
-			interDispName := relation.InterEntity.DisplayName
 
-			interEntity := InterEntity{TableName:interName, StructName:interDispName}
 
 			//fmt.Println("parent ", relation.InterEntity.Name)
 			name := snakeCaseToCamelCase(relation.ChildEntity.DisplayName)
@@ -554,7 +551,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 			case 1: //one to one
 				relationName := name
 				finalId := relationName + " " + d + name + " `gorm:\"ForeignKey:" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + ",omitempty\"`"
-				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName, InterEntity{}})
+				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName})
 				//entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToOne" + relType, relationName, childName, InterEntity{}})
 				g.Id(finalId)
 			case 2: //one to many
@@ -594,43 +591,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 			}
 
 		}
-		/*	for _, relation := range relationsChild {
-			interName := relation.InterEntity.Name
-			interDispName := relation.InterEntity.DisplayName
 
-			interEntity := InterEntity{TableName:interName, StructName:interDispName}
-
-			name := snakeCaseToCamelCase(relation.ParentEntity.DisplayName)
-			childName := string(relation.ChildColumn.Name)
-		//	fmt.Println("entity child name :",entityName,"inter :",interEntity)
-			switch relation.RelationTypeID {
-			case 1: //ont to one
-				// means current entity's one item belongs to
-				if name != entityName {
-					// if check to exclude self join
-					entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{const_OneToOne + const_reverse, name, childName, InterEntity{}})
-				}
-			case 2: //one to many
-				// means current entity's many items belongs to
-				finalId := name + " " + name + " `gorm:\"ForeignKey:" + snakeCaseToCamelCase(childName) + "\" json:\"" + name + ",omitempty\"`"
-				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{const_ManyToOne, name, childName, InterEntity{}})
-				g.Id(finalId)
-			case 3: //many to many
-				// add two record in relation table to create many to many or uncomment this and add relation here
-				relationName := name
-				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", "", childName, interEntity})
-				relationName = name + "s"
-				//finalId := relationName + " []" + name + " `gorm:\"many2many:" + relation.InterEntity.Name + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
-				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
-				g.Id(finalId)
-				//finalInterId := interName + " []" + interName + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
-				//g.Id(finalInterId)
-				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"ManyToMany", name, childName, InterEntity{}})
-			//fmt.Println("\t\t many to many " + relation.InterEntity.DisplayName + " for " + entityName + " from child")
-			}
-		}
-	})
-*/
 
 		//write composite fields while looking at child
 		/*for _, relation := range relationsChild {
@@ -732,7 +693,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 	})
 
 	//write resolver
-	createEntitiesResolver(resolverFile, entityName, entity, database.SQL,entityRelationsForAllEndpoint)
+	createEntitiesResolver(resolverFile, entityName, entity, database.SQL)
 
 	createEntitiesChildSlice(modelFile, entityName, entityRelationsForAllEndpoint)
 
@@ -832,24 +793,8 @@ func createEntities(entity Entity, db *gorm.DB) string {
 	return entityName
 }
 
-func createEntitiesResolver(resolverFile *File, entityName string, entity Entity, db *gorm.DB,entityRelationsForAllEndpoint []EntityRelation) {
-	var allInterRelation []string
-	//fmt.Println("test",len(allInterRelation))
-	var flag int
-	for _, entity := range entityRelationsForAllEndpoint {
-		for _, v := range allInterRelation {
-			if entity.InterEntity.StructName == v {
-				flag = 1
-			}
+func createEntitiesResolver(resolverFile *File, entityName string, entity Entity, db *gorm.DB) {
 
-		}
-
-		if flag != 1 {
-			allInterRelation = append(allInterRelation, entity.InterEntity.StructName)
-		}
-
-	}
-	//	fmt.Println("dsfsd :", allInterRelation)
 
 	var childOfEntity = []Relation{}
 	db.Preload("InterEntity").
@@ -958,176 +903,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 	})
 
 	resolverFile.Empty()
-
-	resolverFile.Comment("For Delete")
-	resolverFile.Func().Id("ResolveDelete" + entityName).Params(Id("args").StructFunc(func(g *Group) {
-
-		g.Id("ID").Qual(const_GraphQlPath, "ID")
-		g.Id("cascadeDelete").Bool()
-	})).Params(Id("response *").Int()).BlockFunc(func(g *Group) {
-
-		g.If(Id("args").Op(".").Id("cascadeDelete").Op("==").Lit("")).BlockFunc(func(h *Group) {
-			h.Id("args").Op(".").Id("cascadeDelete").Op("=").False()
-		})
-
-		resolverFile.Empty()
-		resolverFile.Empty()
-		resolverFile.Comment("For Delete")
-		resolverFile.Func().Id("ResolveDelete" + entityName).Params(Id("args").StructFunc(func(g *Group) {
-
-			g.Id("ID").Qual(const_GraphQlPath, "ID")
-			g.Id("cascadeDelete").Bool()
-		})).Params(Id("response *").Int()).BlockFunc(func(g *Group) {
-
-			g.If(Id("args").Op(".").Id("cascadeDelete").Op("==").Lit("")).BlockFunc(func(h *Group) {
-				h.Id("args").Op(".").Id("cascadeDelete").Op("=").False()
-			})
-
-			resolverFile.Empty()
-			resolverFile.Empty()
-
-			g.Var().Id("del").Bool()
-			g.Var().Id("count").Int()
-
-			g.If(Id("len").Call(Id("models." + entityName + "Children")).Op("==").Lit(0).Op("&&").Id("len").Call(Id("models." + entityName + "InterRelation")).Op("==").Lit(0)).Block(
-				Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
-					Qual(const_UtilsPath, const_UtilsConvertId).Call(
-						Id("args.ID"),
-					),
-					//Id("args.cascadeDelete"),
-				),
-				If().Id("del").Op("==").True().Block(
-					Id("count++"),
-				),
-				Id("response").Op("=").Id("&count"),
-
-				Return(Id("response")),
-			)
-			g.If(Id("args.cascadeDelete").Op("==").True()).BlockFunc(func(h *Group) {
-				h.Var().Id("data models." + entityName)
-
-				h.For(Id("_,v:=").Range().Id("models." + entityName + "Children")).Block(
-					//Id("temp").Op(":=").Lit("Map").Id("+v"),
-
-					//Id("temp1").Op(":=").Lit("models.Delete").Id("+v"),
-					Id("ResolveDeleteEntity").Op(":=").Lit("ResolveDelete").Id("+v"),
-					Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-
-					Id("delId").Op(":=").Lit("data.").Id("+ v +").Lit(".id"),
-
-					//Id("del").Op("=").Id("temp1").Call(                            //delete child from model
-					//	Qual(const_UtilsPath, const_UtilsConvertId).Call(
-					//		Id("delId"),
-					//	),
-					//	//Id("args.cascadeDelete"),
-					//),
-					For(Id("_,v1:=").Range().Id("delId")).Block(
-
-						If(Id("v1").Op("!=").Nil()).Block(
-							Id("count++"),
-
-							Id("args.ID").Op("=").Id("v1"),
-							Id("ResolveDeleteEntity").Call(Id("args")),
-							//Id("response").Op("=").Id("count"),
-						),
-					),
-				)
-				fmt.Println("len :",entityName,len(allInterRelation),"inter :",allInterRelation)
-
-				for _,v:=range allInterRelation{
-					h.For(Id("_,v:=").Range().Id("models." + entityName + "InterRelation")).Block(
-						//Id("temp").Op(":=").Lit("Map").Id("+v"),
-						Var().Id("interData []models."+v),
-						//Id("dataType").Op(":=").Lit("[]models.").Id("+v.StructName"),
-						// Var().Id("interData").Id("dataType"),
-						Id("ResolveDeleteInterTable").Op(":=").Lit("ResolveDelete").Id("+v.StructName"),
-						//	Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-						Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"), Id("args.ID")).Dot("Find").Call(Id("&interData")),
-
-						Id("delId").Op(":=").Id("interData"),
-						For(Id("_,v1:=").Range().Id("delId")).Block(
-
-							If(Id("v1").Op("!=").Nil()).Block(
-								Id("count++"),
-
-								Id("args.ID").Op("=").Id("v1.Id"),
-								Id("ResolveDeleteInterTable").Call(Id("args")),
-								//Id("response").Op("=").Id("count"),
-							),
-						),
-
-					)
-				}
-
-
-				//If(Id("del").Op("==").True()).Block(
-
-				h.Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
-					Qual(const_UtilsPath, const_UtilsConvertId).Call(
-						Id("args.ID"),
-					),
-					//Id("args.cascadeDelete"),
-				)
-				h.Id("count++")
-				h.Id("response").Op("=").Id("&count")
-
-				h.Return(Id("response").Op("+1"))
-				//),
-				//	Else().Block(
-				//	Id("del").Op("=").False(),
-				//	Id("response").Op("=").Id("&del"),
-				//	Return(Id("response")),
-				//),
-
-			})
-
-			g.Var().Id("flag").Int()
-			g.Var().Id("data").Id("models." + entityName)
-
-			g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "Children")).Block(
-				Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-				Id("childEntity").Op(":=").Lit("data.").Id("+v"),
-				If(Id("childEntity").Op("==").Lit("")).Block(
-					Id("flag=1"),
-				),
-
-			)
-
-			for _,v:=range allInterRelation {
-
-				g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "InterRelation")).Block(
-					Var().Id("interData []models."+v),
-
-					//Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-					Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"), Id("args.ID")).Dot("Find").Call(Id("&interData")),
-
-					//Id("temp").Op(":=").Lit("data.+v"),
-					If(Id("len(interData)").Op("==").Lit(0)).Block(
-						Id("flag=1"),
-					),
-
-				)
-			}
-			g.If(Id("flag").Op("==").Lit(1)).Block(
-				Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
-					Qual(const_UtilsPath, const_UtilsConvertId).Call(
-						Id("args.ID"),
-					),
-					//Id("args.cascadeDelete"),
-				),
-				Id("count++"),
-				Id("response").Op("=").Id("&count"),
-
-
-			).Else().Block(
-				Comment("show error"),
-				Id("del").Op("=").False(),
-				Id("response").Op("=").Id("&count"),
-			)
-
-			g.Return(Id("response"))
-		})
-
+	resolverFile.Empty()
 	//**************Create/update Resolver*********************
 
 	resolverFile.Func().Id("ResolveCreate" + entityName).Params(Id("args").Id("*").StructFunc(func(g *Group) {
@@ -1189,49 +965,6 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 						),
 
 						Id(childNameLower).Dot(entityName + "Id").Op("=").Id(entityNameLower).Dot("id"),
-						Id(entityNameLower).Dot(childNameLower).Op("=").
-							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
-							Params(Id(childNameLower))),
-
-
-					),
-
-				)
-
-			} else if val.RelationTypeID == 4 {
-
-				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
-					Dot(childName).Op("!=").Nil()).Block(
-
-					If(Id("args").Dot(entityName).Dot(childName).Dot("Id").Op("==").Nil()).Block(
-						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
-							Dot(entityName).Dot(childName)),
-
-						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
-							Comment("todo throw error"),
-							Return(),
-						),
-
-						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
-						Id(entityNameLower).Dot(childNameLower).Op("=").
-							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
-							Params(Id(childNameLower))),
-
-
-					).Else().Block(
-
-
-						Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("args").
-							Dot(entityName).Dot(childName)),
-
-						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-							Id(entityNameLower).Dot("id").Op("!=").Id(childNameLower).Dot("TypeId")).Block(
-							Comment("todo throw error"),
-							Return(),
-						),
-
-						Id(childNameLower).Dot("TypeId").Op("=").Id(entityNameLower).Dot("id"),
 						Id(entityNameLower).Dot(childNameLower).Op("=").
 							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 							Params(Id(childNameLower))),
@@ -1511,7 +1244,7 @@ func createEntitiesChildSlice(modelFile *File, entityName string, entityRelation
 	modelFile.Comment("Child entities")
 	modelFile.Var().Id(entityName + "Children").Op("=").Lit(allChildren)
 
-	allInterRelation := []string{}
+	/*allInterRelation := []string{}
 
 	var flag int
 
@@ -1546,7 +1279,7 @@ func createEntitiesChildSlice(modelFile *File, entityName string, entityRelation
 		//}
 		//fmt.Println("sub :", value.InterEntity)
 	}
-	modelFile.Op("}")
+	modelFile.Op("}")*/
 
 
 	//modelFile.Var().Id(entityName + "InterRelation").Op("=").Lit(allInterRelation)
