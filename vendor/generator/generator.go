@@ -312,24 +312,42 @@ func mapColumnTypesResolver(col Column, g *Group, isInput bool) {
 
 		finalId := fieldName
 		if isInput {
-			finalId = fieldName + " *"
+			finalId = fieldName+" *"
 		}
 
 		g.Id(finalId).Qual(const_GraphQlPath, "ID")
 		return
 	}
 
+	if isInput == false {
+		if col.ColumnType.Type == "int" {
+			finalId := fieldName + " int32"
+			g.Id(finalId)
+		} else if col.ColumnType.Type == "varchar" {
+			finalId := fieldName + " string"
+			g.Id(finalId)
+		} else {
+			g.Id(fieldName).String() //default string
+		}
+
+	}else if isInput == true {
 	if col.ColumnType.Type == "int" {
-		finalId := fieldName + " int32"
+		finalId := fieldName + " *int32"
 		g.Id(finalId)
-	} else if col.ColumnType.Type == "varchar" {
+	} else if col.ColumnType.Type == "varchar" && strings.HasSuffix(col.Name,"_type") {
+		finalId := fieldName + " *string"
+		g.Id(finalId)
+	} else if col.ColumnType.Type == "varchar"{
 		finalId := fieldName + " string"
 		g.Id(finalId)
 	} else {
 		g.Id(fieldName).String() //default string
 	}
+}
 	return
 }
+
+
 
 //helper methods
 func snakeCaseToCamelCase(inputUnderScoreStr string) (camelCase string) {

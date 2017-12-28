@@ -49,7 +49,7 @@
           {
             "Name": "age",
             "DisplayName": "Age",
-            "Type": 1,
+            "Type": 2,
             "Size": 30
           }
         ]
@@ -169,7 +169,7 @@
           {
             "Name": "phone_number",
             "DisplayName": "PhoneNumber",
-            "Type": 1,
+            "Type": 2,
             "Size": 30
           },
           {

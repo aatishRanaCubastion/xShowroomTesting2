@@ -14,7 +14,7 @@ func createSchema(schemaFile *File, allEntities []Entity, db *gorm.DB) {
 	u.SAppend(&sS, "\n")
 	u.SAppend(&sS, "schema {\n")
 	u.SAppend(&sS, "\tquery: Query\n")
-	//u.SAppend(&sS, "\tmutation: Mutation\n")
+	u.SAppend(&sS, "\tmutation: Mutation\n")
 	u.SAppend(&sS, "}\n\n")
 
 	//write query schema
@@ -42,7 +42,7 @@ func createSchema(schemaFile *File, allEntities []Entity, db *gorm.DB) {
 	u.SAppend(&sS, "# Delete\n")
 	for _, val := range allEntities {
 		entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
-		u.SAppend(&sS, "\t" + "delete" + entityNameCaps + "(id: ID!,cascadeDelete: Boolean) : Int \n")
+		u.SAppend(&sS, "\t" + "delete" + entityNameCaps + "(id: ID!,cascadeDelete: Boolean!) : Int \n")
 	}
 	u.SAppend(&sS, "}\n\n")
 	var relationParent = []Relation{}
@@ -120,7 +120,9 @@ func createSchema(schemaFile *File, allEntities []Entity, db *gorm.DB) {
 			} else if strings.HasSuffix(col.Name, "_type") {
 				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "\n")
 
-			} else {
+			} else if col.Name == "id" {
+				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "\n")
+			}else{
 				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "!\n")
 			}
 

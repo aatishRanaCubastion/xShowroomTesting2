@@ -293,10 +293,13 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 				}
 
 				if column.ColumnType.Type == "int" {
-					d[Id(fieldNameCaps)] = Qual(const_UtilsPath,const_UtilsInt32ToUint).Call(Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+					d[Id(fieldNameCaps)] = Qual(const_UtilsPath,const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
 					continue
 				}
-
+				if column.ColumnType.Type == "varchar" && strings.HasSuffix(column.Name,"_type"){
+					d[Id(fieldNameCaps)] = Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+					continue
+				}
 				d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
 
 			}
@@ -606,7 +609,7 @@ func createResolver(resolverFile *File, allModels []string) {
 		//writing root mutation resolvers
 		resolverFile.Empty()
 		resolverFile.Comment("create resolver for " + val)
-		resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Create" + val).Params(Id("args").Id("*").StructFunc(func(g *Group) {
+		resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Upsert" + val).Params(Id("args").Id("*").StructFunc(func(g *Group) {
 			g.Id(val).Id("*" + valLower + "Input")
 		})).Params(Id("*" + strings.ToLower(val) + "Resolver")).
 			BlockFunc(func(g *Group) {
@@ -628,10 +631,10 @@ func createResolver(resolverFile *File, allModels []string) {
 		resolverFile.Comment("delete resolver for " + val)
 		resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Delete" + val).Params(Id("args").StructFunc(func(g *Group) {
 			g.Id("ID").Qual(const_GraphQlPath, "ID")
-			g.Id("cascadeDelete").Id("bool")
+			g.Id("CascadeDelete").Id("bool")
 
 			//})).Params(Id("*" + strings.ToLower(val) + "Resolver")).
-		})).Params(Id("*int")).
+		})).Params(Id("*int32")).
 			BlockFunc(func(g *Group) {
 			g.Return(Qual("", "ResolveDelete" + val)).Call(Id("args"))
 		})
@@ -662,22 +665,22 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 	resolverFile.Func().Id("ResolveDelete" + entityName).Params(Id("args").StructFunc(func(g *Group) {
 
 		g.Id("ID").Qual(const_GraphQlPath, "ID")
-		g.Id("cascadeDelete").Bool()
-	})).Params(Id("response *").Int()).BlockFunc(func(g *Group) {
+		g.Id("CascadeDelete").Bool()
+	})).Params(Id("response *").Int32()).BlockFunc(func(g *Group) {
 
 
 		resolverFile.Empty()
 		resolverFile.Empty()
 
 		g.Var().Id("del").Bool()
-		g.Var().Id("count").Int()
+		g.Var().Id("count").Int32()
 
 		g.If(Id("len").Call(Id("models." + entityName + "Children")).Op("==").Lit(0).Op("&&").Id("len").Call(Id("models." + entityName + "InterRelation")).Op("==").Lit(0)).Block(
 			Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 				Qual(const_UtilsPath, const_UtilsConvertId).Call(
 					Id("args.ID"),
 				),
-				//Id("args.cascadeDelete"),
+				//Id("args.CascadeDelete"),
 			),
 			If().Id("del").Op("==").True().Block(
 				Id("count++"),
@@ -686,7 +689,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 			Return(Id("response")),
 		)
-		g.If(Id("args.cascadeDelete").Op("==").True()).BlockFunc(func(h *Group) {
+		g.If(Id("args.CascadeDelete").Op("==").True()).BlockFunc(func(h *Group) {
 			h.Var().Id("data models." + entityName)
 
 			h.For(Id("_,v:=").Range().Id("models." + entityName + "Children")).Block(
@@ -702,7 +705,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 				//     Qual(const_UtilsPath, const_UtilsConvertId).Call(
 				//            Id("delId"),
 				//     ),
-				//     //Id("args.cascadeDelete"),
+				//     //Id("args.CascadeDelete"),
 				//),
 				For(Id("_,v1:=").Range().Qual("fmt","Sprintf").Call(Lit("data.").Id("+ v +").Lit(".id"))).Block(
 
@@ -752,7 +755,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 				Qual(const_UtilsPath, const_UtilsConvertId).Call(
 					Id("args.ID"),
 				),
-				//Id("args.cascadeDelete"),
+				//Id("args.CascadeDelete"),
 			)
 			h.Id("count++")
 			h.Id("response").Op("=").Id("&count")
@@ -804,7 +807,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 				Qual(const_UtilsPath, const_UtilsConvertId).Call(
 					Id("args.ID"),
 				),
-				//Id("args.cascadeDelete"),
+				//Id("args.CascadeDelete"),
 			),
 			Id("count++"),
 			Id("response").Op("=").Id("&count"),
