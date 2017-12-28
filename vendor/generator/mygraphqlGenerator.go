@@ -172,7 +172,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		}
 
 		if value.RelationTypeID==2 || value.RelationTypeID==3 || value.RelationTypeID == 5 || value.RelationTypeID == 6{
-			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(childNameCaps+"s").Params().Id("*" + childNameLower + "Resolver").BlockFunc(func(g *Group) {
+			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(childNameCaps+"s").Params().Id("[]*" + childNameLower + "Resolver").BlockFunc(func(g *Group) {
 				g.Var().Id(childNameLower+"s").Id("[]*"+childNameLower+"Resolver")
 				g.If(Id("r").Op(".").Id(entityNameLower).Op("!=").Nil()).BlockFunc(func(h *Group) {
 					h.Id(childNameLower).Op(":=").Qual(const_ModelsPath, "Get" + childNameCaps + "sOf" + entityName).Call(
@@ -293,7 +293,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 				}
 
 				if column.ColumnType.Type == "int" {
-					d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+					d[Id(fieldNameCaps)] = Qual(const_UtilsPath,const_UtilsInt32ToUint).Call(Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps))
 					continue
 				}
 
@@ -619,7 +619,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 		}
 
 	}
-	//     fmt.Println("dsfsd :", allInterRelation)
+	    fmt.Println("dsfsd :", allInterRelation)
 
 	resolverFile.Comment("For Delete")
 	resolverFile.Func().Id("ResolveDelete" + entityName).Params(Id("args").StructFunc(func(g *Group) {
@@ -659,7 +659,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 				Id("ResolveDeleteEntity").Op(":=").Lit("ResolveDelete").Id("+v"),
 				Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
 
-				Id("delId").Op(":=").Lit("data.").Id("+ v +").Lit(".id"),
+				//Qual("fmt","Sprintf").Lit("data.").Id("+ v +").Lit(".id"),
 
 				//Id("del").Op("=").Id("temp1").Call(                            //delete child from model
 				//     Qual(const_UtilsPath, const_UtilsConvertId).Call(
@@ -667,13 +667,14 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 				//     ),
 				//     //Id("args.cascadeDelete"),
 				//),
-				For(Id("_,v1:=").Range().Id("delId")).Block(
+				For(Id("_,v1:=").Range().Qual("fmt","Sprintf").Call(Lit("data.").Id("+ v +").Lit(".id"))).Block(
 
 					If(Id("v1").Op("!=").Lit(0)).Block(
 						Id("count++"),
 
-						Id("args.ID").Op("=").Id("v1"),
-						Id("ResolveDeleteEntity").Call(Id("args")),
+						Id("args.ID").Op("=").Qual(const_UtilsPath,const_UtilsRuneToGraphId).Call(Id("v1")),
+						//Id("ResolveDeleteEntity").Call(Id("args")),
+						Qual("fmt","Sprint").Call(Id("ResolveDeleteEntity+").Lit("(args)")),
 						//Id("response").Op("=").Id("count"),
 					),
 				),
@@ -693,11 +694,13 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 					Id("delId").Op(":=").Id("interData"),
 					For(Id("_,v1:=").Range().Id("delId")).Block(
 
-						If(Id("v1").Op("!=").Nil()).Block(
+						If(Id("v1.Id").Op("!=").Lit(0)).Block(
 							Id("count++"),
 
-							Id("args.ID").Op("=").Id("v1.Id"),
-							Id("ResolveDeleteInterTable").Call(Id("args")),
+							Id("args.ID").Op("=").Qual(const_UtilsPath,const_UtilsUintToGraphId).Call(Id("v1.Id")),
+							//Id("ResolveDeleteInterTable").Call(Id("args")),
+							Qual("fmt","Sprint").Call(Id("ResolveDeleteInterTable+").Lit("(args)")),
+
 							//Id("response").Op("=").Id("count"),
 						),
 					),
@@ -717,7 +720,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 			h.Id("count++")
 			h.Id("response").Op("=").Id("&count")
 
-			h.Return(Id("response").Op("+1"))
+			h.Return(Id("response"))
 			//),
 			//     Else().Block(
 			//     Id("del").Op("=").False(),
@@ -731,9 +734,11 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 		g.Var().Id("data").Id("models." + entityName)
 
 		g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "Children")).Block(
+
 			Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-			Id("childEntity").Op(":=").Lit("data.").Id("+v"),
-			If(Id("childEntity").Op("==").Lit("")).Block(
+			//Id("childEntity").Op(":=").Lit("data.").Id("+v"),
+
+			If(Qual("fmt","Sprint").Call(Lit("data.").Id("+v+").Lit(".id")).Op("==").Lit("")).Block(
 				Id("flag=1"),
 			),
 
@@ -742,14 +747,17 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 		for _,v:=range allInterRelation {
 
 			g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "InterRelation")).Block(
-				Var().Id("interData []models."+v),
 
-				//Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-				Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"), Id("args.ID")).Dot("Find").Call(Id("&interData")),
+				If().Id("v.StructName").Op("==").Lit(v).Block(
+					Var().Id("interData []models."+v),
 
-				//Id("temp").Op(":=").Lit("data.+v"),
-				If(Id("len(interData)").Op("==").Lit(0)).Block(
-					Id("flag=1"),
+					//Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
+					Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"), Id("args.ID")).Dot("Find").Call(Id("&interData")),
+
+					//Id("temp").Op(":=").Lit("data.+v"),
+					If(Id("len(interData)").Op("==").Lit(0)).Block(
+						Id("flag=1"),
+					),
 				),
 
 			)

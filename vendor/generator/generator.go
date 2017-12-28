@@ -33,11 +33,11 @@ var const_RouterPath = "router"
 var const_UtilsPath = "utils"
 var const_GeneratorPath = "generator"
 var const_GraphQlPath = "github.com/neelance/graphql-go"
-
+var const_UtilsInt32ToUint = "Int32ToUint"
 var const_UtilsStringToUInt = "StringToUInt"
 var const_UtilsConvertId = "ConvertId"
 var const_UtilsUintToGraphId = "UintToGraphId"
-
+var const_UtilsRuneToGraphId = "RuneToGraphId"
 var const_OneToOne = "OneToOne"
 var const_OneToMany = "OneToMany"
 var const_ManyToOne = "ManyToOne"
