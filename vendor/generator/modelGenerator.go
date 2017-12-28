@@ -282,6 +282,9 @@ func createEntities(entity Entity, db *gorm.DB) string {
 
 	createEntitiesDeleteMethod(modelFile, entityName, deleteMethodName, controllerFile)
 
+	createResolverFieldFunctions(modelFile, entity, database.SQL)
+
+
 	if len(specialMethods) > 0 {
 		for _, method := range specialMethods {
 			modelFile.Empty()
@@ -623,4 +626,95 @@ func createEntitiesAllChildMethod(modelFile *File, entityName string, allMethodN
 			Id("data").
 			Op("}"))
 	})
+}
+
+func createResolverFieldFunctions(modelFile *File, entity Entity, db *gorm.DB) {
+	entityName := snakeCaseToCamelCase(entity.DisplayName)
+	//entityNameLower := strings.ToLower(entity.DisplayName)
+
+	relationsParent := []Relation{}
+	db.Preload("InterEntity").
+		Preload("ChildEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("parent_entity_id=?", entity.ID).
+		Find(&relationsParent)
+
+	//fetch relations of this entity matching child
+	relationsChild := []Relation{}
+	db.Preload("InterEntity").
+		Preload("ParentEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("child_entity_id=?", entity.ID).
+		Find(&relationsChild)
+
+	for _, val := range relationsParent {
+		childNameLower := strings.ToLower(val.ChildEntity.DisplayName)
+		childNameCaps := snakeCaseToCamelCase(val.ChildEntity.DisplayName)
+
+		if val.RelationTypeID == 1 || val.RelationTypeID == 2 {
+			modelFile.Func().Id("Get" + entityName + "Of" + childNameCaps).Params(Id(childNameLower).Id(childNameCaps)).Id(entityName).BlockFunc(func(g *Group) {
+				g.Id("data").Op(":=").Id(entityName).Block()
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").
+					Id("Where").Params(Lit("id = ?").Op(",").Id(childNameLower).Dot(val.ChildColumn.DisplayName)).Op(".").Id("Find").Params(Id("&data"))
+				g.Return(Id("data"))
+			})
+		}
+
+		if val.RelationTypeID == 4 || val.RelationTypeID == 5 {
+			modelFile.Func().Id("Get" + entityName + "Of" + childNameCaps).Params(Id(childNameLower).Id(childNameCaps)).Id(entityName).BlockFunc(func(g *Group) {
+				g.Id("data").Op(":=").Id(entityName).Block()
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").
+					Id("Where").Params(Lit("id = ?").Op(",").Id(childNameLower).Dot(val.ChildColumn.DisplayName)).Op(".").Id("Find").Params(Id("&data"))
+				g.Return(Id("data"))
+			})
+		}
+
+		if val.RelationTypeID == 3 || val.RelationTypeID == 6 {
+			// todo many to many and polymorphic many to many
+
+			modelFile.Func().Id("Get" + entityName + "sOf" + childNameCaps).Params(Id(childNameLower+"id").Uint()).Id("[]"+entityName).BlockFunc(func(g *Group) {
+				g.Id("data").Op(":=").Id("[]"+entityName).Block()
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").
+					Id("Where").Params(Lit("id = ?").Op(",").Id(childNameLower+"id")).Op(".").Id("Find").Params(Id("&data"))
+				g.Return(Id("data"))
+			})
+		}
+
+	}
+
+	for _, val := range relationsChild {
+		parentNameLower := strings.ToLower(val.ParentEntity.DisplayName)
+		parentNameCaps := snakeCaseToCamelCase(val.ParentEntity.DisplayName)
+
+		if val.RelationTypeID == 1 || val.RelationTypeID ==4{
+			modelFile.Func().Id("Get" + entityName + "Of" + parentNameCaps).Params(Id(parentNameLower + "id").Uint()).Id(entityName).BlockFunc(func(g *Group) {
+				g.Id("data").Op(":=").Id(parentNameCaps).Block()
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").Id("Preload").Params(Lit(entityName)).Op(".").
+					Id("Where").Params(Lit("id = ?").Op(",").Id(parentNameLower + "id")).Op(".").Id("Find").Params(Id("&data"))
+				g.Return(Id("data").Op(".").Id(entityName))
+			})
+		}
+
+		if val.RelationTypeID == 2 || val.RelationTypeID == 5{
+			modelFile.Func().Id("Get" + entityName + "sOf" + parentNameCaps).Params(Id(parentNameLower + "id").Uint()).Id("[]" + entityName).BlockFunc(func(g *Group) {
+				g.Id("data").Op(":=").Id(parentNameCaps).Block()
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").Id("Preload").Params(Lit(entityName)).Op(".").
+					Id("Where").Params(Lit("id = ?").Op(",").Id(parentNameLower + "id")).Op(".").Id("Find").Params(Id("&data"))
+				g.Return(Id("data").Op(".").Id(entityName + "s"))
+			})
+		}
+
+		if val.RelationTypeID == 3 || val.RelationTypeID == 6 {
+			//todo many to many and polymorphic many to many
+			modelFile.Func().Id("Get" + entityName + "sOf" + parentNameCaps).Params(Id(parentNameLower + "id").Uint()).Id("[]" + entityName).BlockFunc(func(g *Group) {
+				g.Id("data").Op(":=").Id(parentNameCaps).Block()
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").Id("Preload").Params(Lit(entityName)).Op(".").
+					Id("Where").Params(Lit("id = ?").Op(",").Id(parentNameLower + "id")).Op(".").Id("Find").Params(Id("&data"))
+				g.Return(Id("data").Op(".").Id(entityName + "s"))
+			})
+		}
+	}
+
 }

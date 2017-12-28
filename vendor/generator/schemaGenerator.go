@@ -38,6 +38,12 @@ func createSchema(schemaFile *File, allEntities []Entity, db *gorm.DB) {
 		entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
 		u.SAppend(&sS, "\tupsert" + entityNameCaps + "(" + entityNameLower + ": " + entityNameCaps + "Input!) :" + entityNameCaps + "\n")
 	}
+
+	u.SAppend(&sS, "# Delete\n")
+	for _, val := range allEntities {
+		entityNameCaps := snakeCaseToCamelCase(val.DisplayName)
+		u.SAppend(&sS, "\t" + "delete" + entityNameCaps + "(id: ID!,cascadeDelete: Boolean) : Int \n")
+	}
 	u.SAppend(&sS, "}\n\n")
 	var relationParent = []Relation{}
 	var relationChild = []Relation{}

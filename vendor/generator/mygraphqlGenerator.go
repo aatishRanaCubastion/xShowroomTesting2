@@ -200,7 +200,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(parentNameCaps).Params().Id("*" + parentNameLower + "Resolver").BlockFunc(func(g *Group) {
 				g.If(Id("r").Op(".").Id(entityNameLower).Op("!=").Nil()).BlockFunc(func(h *Group) {
 					h.Id(parentNameLower).Op(":=").Qual(const_ModelsPath, "Get" + parentNameCaps + "Of" + entityName).Call(
-						Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("r").Op(".").Id(entityNameLower).Op(".").Id("id")),
+						Qual("","ReverseMap2"+entityName).Call(Id("r").Op(".").Id(entityNameLower)),
 					)
 					h.Return(Id("&" + parentNameLower + "Resolver").Values(
 						Qual("", "Map" + parentNameCaps).Call(Id(parentNameLower)),
@@ -211,7 +211,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		}
 
 		if value.RelationTypeID==3 || value.RelationTypeID == 6{
-			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(parentNameCaps+"s").Params().Id("*" + parentNameLower + "Resolver").BlockFunc(func(g *Group) {
+			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(parentNameCaps+"s").Params().Id("[]*" + parentNameLower + "Resolver").BlockFunc(func(g *Group) {
 				g.Var().Id(parentNameLower+"s").Id("[]*"+parentNameLower+"Resolver")
 				g.If(Id("r").Op(".").Id(entityNameLower).Op("!=").Nil()).BlockFunc(func(h *Group) {
 					h.Id(parentNameLower).Op(":=").Qual(const_ModelsPath, "Get" + parentNameCaps + "sOf" + entityName).Call(
@@ -302,6 +302,41 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			}
 		}))
 		g.Return(Id(entityNameLower + "Model"))
+	})
+
+	//reverse kiran mapper method
+
+	resolverFile.Func().Id("ReverseMap2" + entityName).Params(Id("struct" + entityName).Id("*"+entityNameLower)).Params(Qual(const_ModelsPath,entityName)).BlockFunc(func(g *Group) {
+		g.Empty()
+
+		//g.If(Id("model" + entityName).Op("== (").Qual(const_ModelsPath, entityName).Op("{})")).BlockFunc(func(h *Group) {
+		g.If(Qual("reflect", "DeepEqual").Call(Id("struct" + entityName), Id(entityNameLower).Op("{}"))).BlockFunc(func(h *Group) {
+			h.Return(Qual(const_ModelsPath,entityName).Values())
+		})
+
+		g.Empty()
+		g.Comment("Create graphql " + entityNameLower + " from " + const_ModelsPath + " " + entityName)
+		g.Id("model"+entityName).Op(":=").Qual(const_ModelsPath,entityName).Values(DictFunc(func(d Dict) {
+			for _, column := range entity.Columns {
+
+				fieldNameCaps := snakeCaseToCamelCase(column.Name)
+
+				if column.Name == "id" {
+					//graphql.ID(strconv.Itoa(modelUser.Id)),
+					d[Id(fieldNameCaps)] = Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("struct" + entityName).Op(".").Id(column.Name))
+					continue
+				}
+
+				if column.ColumnType.Type == "int" {
+					d[Id(fieldNameCaps)] = Qual("", "uint").Call(Id("struct" + entityName).Op(".").Id(column.Name))
+					continue
+				}
+
+				d[Id(fieldNameCaps)] = Id("struct" + entityName).Op(".").Id(column.Name)
+
+			}
+		}))
+		g.Return(Id("model" + entityName))
 	})
 
 }
@@ -593,6 +628,8 @@ func createResolver(resolverFile *File, allModels []string) {
 		resolverFile.Comment("delete resolver for " + val)
 		resolverFile.Func().Params(Id("r").Id(" *Resolver")).Id("Delete" + val).Params(Id("args").StructFunc(func(g *Group) {
 			g.Id("ID").Qual(const_GraphQlPath, "ID")
+			g.Id("cascadeDelete").Id("bool")
+
 			//})).Params(Id("*" + strings.ToLower(val) + "Resolver")).
 		})).Params(Id("*int")).
 			BlockFunc(func(g *Group) {
