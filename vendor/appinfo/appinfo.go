@@ -18,6 +18,7 @@ type Field struct {
 	DisplayName string
 	Type        int
 	Size        int
+	IsNull	    int
 }
 
 type Entity struct {

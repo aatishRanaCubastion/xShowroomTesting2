@@ -68,6 +68,7 @@ type Column struct {
 	Size        int `sql:"type:int(30)"`
 	TypeID      int `sql:"type:int(30)"`
 	EntityID    int `sql:"type:int(100)" gorm:"unique_index:idx_name_entity_id"`
+	IsNull	    int `sql:"type:int(30)"`
 	ColumnType  ColumnType `gorm:"ForeignKey:TypeID"` //belong to (for reverse access)
 }
 
@@ -301,7 +302,10 @@ func mapColumnTypesResolver(col Column, g *Group, isInput bool) {
 	var fieldName string
 	fieldNameLower := strings.ToLower(col.Name)
 	fieldNameCaps := snakeCaseToCamelCase(col.Name)
-
+	isNull:=" "
+	if isInput == true && col.IsNull==1{
+		isNull=" *"
+	}
 	if isInput {
 		fieldName = fieldNameCaps
 	} else {
@@ -332,16 +336,17 @@ func mapColumnTypesResolver(col Column, g *Group, isInput bool) {
 
 	}else if isInput == true {
 	if col.ColumnType.Type == "int" {
-		finalId := fieldName + " *int32"
+		finalId := fieldName +isNull+ "int32"
 		g.Id(finalId)
 	} else if col.ColumnType.Type == "varchar" && strings.HasSuffix(col.Name,"_type") {
 		finalId := fieldName + " *string"
 		g.Id(finalId)
 	} else if col.ColumnType.Type == "varchar"{
-		finalId := fieldName + " string"
+		finalId := fieldName + isNull+"string"
 		g.Id(finalId)
 	} else {
-		g.Id(fieldName).String() //default string
+		finalId := fieldName +isNull+"string"//default string
+		g.Id(finalId)
 	}
 }
 	return

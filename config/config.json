@@ -38,19 +38,22 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "name",
             "DisplayName": "Name",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           },
           {
             "Name": "age",
             "DisplayName": "Age",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           }
         ]
       },
@@ -62,19 +65,22 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "uuid",
             "DisplayName": "Uuid",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           },
           {
             "Name": "user_id",
             "DisplayName": "UserId",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           }
         ]
       },
@@ -86,13 +92,15 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "name",
             "DisplayName": "Name",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           }
         ]
       },
@@ -104,19 +112,22 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "name",
             "DisplayName": "Name",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           },
           {
             "Name": "account_id",
             "DisplayName": "AccountId",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           }
         ]
       },
@@ -128,13 +139,15 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "name",
             "DisplayName": "Name",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           }
         ]
       },
@@ -146,13 +159,15 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "name",
             "DisplayName": "Name",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           }
         ]
       },
@@ -164,25 +179,29 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "phone_number",
             "DisplayName": "PhoneNumber",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           },
           {
             "Name": "type_id",
             "DisplayName": "TypeId",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "phone_type",
             "DisplayName": "PhoneType",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           }
         ]
       },
@@ -194,25 +213,29 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "name",
             "DisplayName": "Name",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           },
           {
             "Name": "type_id",
             "DisplayName": "TypeId",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "sale_type",
             "DisplayName": "SaleType",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           }
         ]
       },
@@ -224,19 +247,22 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "name",
             "DisplayName": "Name",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           },
           {
             "Name": "place",
             "DisplayName": "Place",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":0
           }
         ]
       },
@@ -248,19 +274,22 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "product_id",
             "DisplayName": "ProductId",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "rel_prod_id",
             "DisplayName": "RelProdId",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           }
         ]
       },
@@ -272,25 +301,29 @@
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "sale_id",
             "DisplayName": "SaleId",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "type_id",
             "DisplayName": "TypeId",
             "Type": 1,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           },
           {
             "Name": "sale_type",
             "DisplayName": "SaleType",
             "Type": 2,
-            "Size": 30
+            "Size": 30,
+            "IsNull":1
           }
         ]
       }
@@ -391,6 +424,18 @@
       {
         "Id": 3,
         "Name": "ManyToMany"
+      },
+      {
+        "Id": 4,
+        "Name": "PolyOneToOne"
+      },
+      {
+        "Id": 5,
+        "Name": "PolyOneToMany"
+      },
+      {
+        "Id": 6,
+        "Name": "PolyManyToMany"
       }
     ]
   }

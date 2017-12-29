@@ -62,6 +62,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 	resolverFile.Empty()
 	resolverFile.Comment("Struct for upserting")
 	resolverFile.Type().Id(entityNameLower + "Input").StructFunc(func(g *Group) {
+
 		//write primitive fields
 		for _, column := range entity.Columns {
 			mapColumnTypesResolver(column, g, true)
@@ -470,6 +471,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Return(Id("&"+entityNameLower+"Resolver{}")),						),
 
 						Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+						Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
 						Id(entityNameLower).Dot(childNameLower).Op("=").
 							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
 							Params(Id(childNameLower))),
@@ -487,6 +489,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Return(Id("&"+entityNameLower+"Resolver{}")),						),
 
 						Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+						Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
 						Id(entityNameLower).Dot(childNameLower).Op("=").
 							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 							Params(Id(childNameLower))),
@@ -583,6 +586,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")),
+							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
 								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
 								Params(Id(childNameLower)))),
@@ -599,6 +603,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")),
+							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
 								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 								Params(Id(childNameLower)))),

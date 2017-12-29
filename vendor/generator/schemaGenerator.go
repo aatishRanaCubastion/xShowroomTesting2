@@ -105,8 +105,12 @@ func createSchema(schemaFile *File, allEntities []Entity, db *gorm.DB) {
 		u.SAppend(&sS, "}\n")
 
 		u.SAppend(&sS, "input " + entityNameCaps + "Input {\n")
-		for _, col := range val.Columns {
 
+		for _, col := range val.Columns {
+			isNull:=" "
+			if col.IsNull == 0{
+				isNull = "!"
+			}
 			fieldType := "String"
 			if col.ColumnType.Type == "int" {
 				fieldType = "Int"
@@ -115,15 +119,15 @@ func createSchema(schemaFile *File, allEntities []Entity, db *gorm.DB) {
 				fieldType = "ID"
 			}
 			if strings.HasSuffix(col.Name, "_id") {
-				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "\n")
+				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType+isNull + "\n")
 
 			} else if strings.HasSuffix(col.Name, "_type") {
-				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "\n")
+				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType+isNull + "\n")
 
 			} else if col.Name == "id" {
-				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "\n")
+				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType +isNull+ "\n")
 			}else{
-				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType + "!\n")
+				u.SAppend(&sS, "\t" + col.Name + ": " + fieldType+isNull + "\n")
 			}
 
 		}
