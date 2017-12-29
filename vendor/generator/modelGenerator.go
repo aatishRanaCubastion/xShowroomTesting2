@@ -129,7 +129,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 
 			case 4: // Polymorphic OnetoOne
 				relationName := name
-				finalId := relationName + " " + d + name + " `gorm:\":" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + ",omitempty\"`"
+				finalId := relationName + " " + d + name + " `gorm:\"ForeignKey:" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + ",omitempty\"`"
 				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"OneToOne" + relType, name, childName,InterEntity{}})
 				//entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToOne" + relType, relationName, childName})
 				childOfEntity=append(childOfEntity,name)
@@ -138,8 +138,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 
 			case 5:        // Polymorphic OnetoMany
 				relationName := name + "s"
-				//finalId := relationName + " []" + name + " `gorm:\"many2many:" + relation.InterEntity.Name + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
-				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				finalId := relationName + " []" + name + " `gorm:\"ForeignKey:" + childName + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
 				g.Id(finalId)
 				childOfEntity=append(childOfEntity,name+"s")
 
@@ -700,7 +699,7 @@ func createResolverFieldFunctions(modelFile *File, entity Entity, db *gorm.DB) {
 		if val.RelationTypeID == 2 || val.RelationTypeID == 5{
 			modelFile.Func().Id("Get" + entityName + "sOf" + parentNameCaps).Params(Id(parentNameLower + "id").Uint()).Id("[]" + entityName).BlockFunc(func(g *Group) {
 				g.Id("data").Op(":=").Id(parentNameCaps).Block()
-				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").Id("Preload").Params(Lit(entityName)).Op(".").
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").Id("Preload").Params(Lit(entityName+"s")).Op(".").
 					Id("Where").Params(Lit("id = ?").Op(",").Id(parentNameLower + "id")).Op(".").Id("Find").Params(Id("&data"))
 				g.Return(Id("data").Op(".").Id(entityName + "s"))
 			})
@@ -710,7 +709,7 @@ func createResolverFieldFunctions(modelFile *File, entity Entity, db *gorm.DB) {
 			//todo many to many and polymorphic many to many
 			modelFile.Func().Id("Get" + entityName + "sOf" + parentNameCaps).Params(Id(parentNameLower + "id").Uint()).Id("[]" + entityName).BlockFunc(func(g *Group) {
 				g.Id("data").Op(":=").Id(parentNameCaps).Block()
-				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").Id("Preload").Params(Lit(entityName)).Op(".").
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").Id("Preload").Params(Lit(entityName+"s")).Op(".").
 					Id("Where").Params(Lit("id = ?").Op(",").Id(parentNameLower + "id")).Op(".").Id("Find").Params(Id("&data"))
 				g.Return(Id("data").Op(".").Id(entityName + "s"))
 			})

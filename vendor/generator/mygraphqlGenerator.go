@@ -281,7 +281,36 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 		g.Empty()
 		g.Comment("Create graphql " + entityNameLower + " from " + const_ModelsPath + " " + entityName)
-		g.Id(entityNameLower + "Model").Op(":=").Qual(const_ModelsPath, entityName).Values(DictFunc(func(d Dict) {
+
+		g.Var().Id(entityNameLower+"Model").Id(const_ModelsPath).Dot(entityName)
+
+		g.If(Id("mygraphql" + entityName).Dot("Id").Op("==").Nil()).Block(
+
+
+			Id(entityNameLower + "Model").Op("=").Qual(const_ModelsPath, entityName).Values(DictFunc(func(d Dict) {
+				for _, column := range entity.Columns {
+
+					fieldNameCaps := snakeCaseToCamelCase(column.Name)
+
+					if column.Name == "id" {
+						//graphql.ID(strconv.Itoa(modelUser.Id)),
+						//d[Id(fieldNameCaps)] = Qual("utils", "ConvertId").Params(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+						continue
+					}
+
+					if column.ColumnType.Type == "int" && strings.HasSuffix(column.Name,"_id"){
+						//d[Id(fieldNameCaps)] = Qual(const_UtilsPath,const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+						continue
+					}
+					if column.ColumnType.Type == "varchar" && strings.HasSuffix(column.Name,"_type"){
+						//d[Id(fieldNameCaps)] = Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+						continue
+					}
+					d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+
+				}
+			}))).Else().Block(
+				Id(entityNameLower + "Model").Op("=").Qual(const_ModelsPath, entityName).Values(DictFunc(func(d Dict) {
 			for _, column := range entity.Columns {
 
 				fieldNameCaps := snakeCaseToCamelCase(column.Name)
@@ -303,7 +332,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 				d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
 
 			}
-		}))
+		})))
 		g.Return(Id(entityNameLower + "Model"))
 	})
 
