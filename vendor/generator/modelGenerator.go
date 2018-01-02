@@ -275,7 +275,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 
 	createEntitiesGetMethod(modelFile, entityName, getByIdMethodName, controllerFile)
 
-	createEntitiesPostMethod(modelFile, entityName, postMethodName, entityFields, controllerFile)
+	createEntitiesPostMethod(modelFile, entityName,entity, postMethodName, entityFields, controllerFile,database.SQL)
 
 	createEntitiesPutMethod(modelFile, entityName, putMethodName, controllerFile)
 
@@ -463,14 +463,38 @@ func createEntitiesGetMethod(modelFile *File, entityName string, methodName stri
 	)
 }
 
-func createEntitiesPostMethod(modelFile *File, entityName string, methodName string, entityFields []EntityField, controllerFile *File) {
+func createEntitiesPostMethod(modelFile *File, entityName string, entity Entity,methodName string, entityFields []EntityField, controllerFile *File,db *gorm.DB) {
+
+
 	modelFile.Empty()
 	//write insert method
 	modelFile.Comment("This method will insert one " + entityName + " in db")
-	modelFile.Func().Id(methodName).Params(Id("data").Id(entityName)).Id(entityName).Block(
-		Qual(const_DatabasePath, "SQL.Create").Call(Id("&").Id("data")),
-		Return(Id("data")),
-	)
+
+		if entity.DisplayName=="ProductProductGroup"{
+			modelFile.Func().Id(methodName).Params(Id("data").Id(entityName)).Id(entityName).Block(
+				Var().Id("oldData").Id("[]"+entity.DisplayName),
+				Qual(const_DatabasePath,"SQL.Find").Call(Id("&oldData")),
+
+				For(Id("_ ,").Id("val").Op(":=").Range().Id("oldData")).Block(
+
+					If(Id("val").Dot("ProductId").Op("==").Id("data").Dot("ProductId").Op("&&").
+					Id("val").Dot("RelProdId").Op("==").Id("data").Dot("RelProdId")).Block(
+
+						Return( Id(entity.DisplayName+"{}")),
+					),
+				),
+
+				Qual(const_DatabasePath, "SQL.Create").Call(Id("&").Id("data")),
+				Return(Id("data")),
+			)
+		}else {
+			modelFile.Func().Id(methodName).Params(Id("data").Id(entityName)).Id(entityName).Block(
+				Qual(const_DatabasePath, "SQL.Create").Call(Id("&").Id("data")),
+				Return(Id("data")),
+			)
+		}
+
+
 
 	// controller method
 	controllerFile.Empty()
