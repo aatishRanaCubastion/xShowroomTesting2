@@ -1,6 +1,7 @@
 package utils
 
-import (
+import
+(
 	"strconv"
 	"github.com/neelance/graphql-go"
 	"strings"
@@ -23,10 +24,20 @@ func ConvertId(id graphql.ID) uint {
 	return val
 }
 
-
 func UintToGraphId(ID uint) graphql.ID {
 	str := fmt.Sprint(ID)
 	return graphql.ID(str)
+}
+func RuneToGraphId(ID rune) graphql.ID {
+	str := fmt.Sprint(ID)
+	return graphql.ID(str)
+}
+
+
+func Int32ToUint(ID int32) uint {
+	str := fmt.Sprint(ID)
+	str2:=StringToUInt(str)
+	return str2
 }
 
 func SAppend(old *string, new string) {
