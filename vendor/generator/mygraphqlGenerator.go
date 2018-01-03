@@ -127,7 +127,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 	resolverFile.Empty()
 	resolverFile.Empty()
 
-	entitiesdeleteResolver(resolverFile,entityName,entity,entityRelationsForAllEndpoint)
+	entitiesdeleteResolver(resolverFile,entityName,entity,entityRelationsForAllEndpoint,db)
 
 	resolverFile.Comment("Fields resolvers")
 	//scalar types fields
@@ -833,7 +833,7 @@ func createResolver(resolverFile *File, allModels []string) {
 	}
 }
 
-func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity, entityRelationsForAllEndpoint []EntityRelation){
+func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity, entityRelationsForAllEndpoint []EntityRelation,db *gorm.DB){
 	var allInterRelation []string
 	//fmt.Println("test",len(allInterRelation))
 	var flag int
@@ -850,7 +850,28 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 		}
 
 	}
-	    fmt.Println("dsfsd :", allInterRelation)
+
+
+	fmt.Println("dsfsd :", allInterRelation)
+
+
+	relationsParent := []Relation{}
+	db.Preload("InterEntity").
+		Preload("ChildEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("parent_entity_id=?", entity.ID).
+		Find(&relationsParent)
+
+	//fetch relations of this entity matching child
+	relationsChild := []Relation{}
+	db.Preload("InterEntity").
+		Preload("ParentEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("child_entity_id=?", entity.ID).
+		Find(&relationsChild)
+
 
 	resolverFile.Comment("For Delete")
 	resolverFile.Func().Id("ResolveDelete" + entityName).Params(Id("args").StructFunc(func(g *Group) {
@@ -866,6 +887,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 		g.Var().Id("del").Bool()
 		g.Var().Id("count").Int32()
 
+
 		g.If(Id("len").Call(Id("models." + entityName + "Children")).Op("==").Lit(0).Op("&&").Id("len").Call(Id("models." + entityName + "InterRelation")).Op("==").Lit(0)).Block(
 			Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 				Qual(const_UtilsPath, const_UtilsConvertId).Call(
@@ -880,136 +902,186 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 			Return(Id("response")),
 		)
-		g.If(Id("args.CascadeDelete").Op("==").True()).BlockFunc(func(h *Group) {
-			h.Var().Id("data models." + entityName)
 
-			h.For(Id("_,v:=").Range().Id("models." + entityName + "Children")).Block(
-				//Id("temp").Op(":=").Lit("Map").Id("+v"),
+		for _,v := range relationsParent {
+			fmt.Println(v)
 
-				//Id("temp1").Op(":=").Lit("models.Delete").Id("+v"),
-				Id("ResolveDeleteEntity").Op(":=").Lit("ResolveDelete").Id("+v"),
-				Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
+			g.Id("tempID").Op(":=").Id("args").Op(".").Id("ID")
 
-				//Qual("fmt","Sprintf").Lit("data.").Id("+ v +").Lit(".id"),
 
-				//Id("del").Op("=").Id("temp1").Call(                            //delete child from model
-				//     Qual(const_UtilsPath, const_UtilsConvertId).Call(
-				//            Id("delId"),
-				//     ),
-				//     //Id("args.CascadeDelete"),
-				//),
-				For(Id("_,v1:=").Range().Qual("fmt","Sprintf").Call(Lit("data.").Id("+ v +").Lit(".id"))).Block(
+			var sliceForPreload[]string
 
-					If(Id("v1").Op("!=").Lit(0)).Block(
-						Id("count++"),
+			for _ , val :=  range relationsParent{
 
-						Id("args.ID").Op("=").Qual(const_UtilsPath,const_UtilsRuneToGraphId).Call(Id("v1")),
-						//Id("ResolveDeleteEntity").Call(Id("args")),
-						Qual("fmt","Sprint").Call(Id("ResolveDeleteEntity+").Lit("(args)")),
-						//Id("response").Op("=").Id("count"),
-					),
-				),
-			)
-			fmt.Println("len :",entityName,len(allInterRelation),"inter :",allInterRelation)
+				var childnameCaps string
+				if val.RelationTypeID == 1 || val.RelationTypeID == 4 {
+					childnameCaps = snakeCaseToCamelCase(val.ChildEntity.DisplayName)
+				}
+				if val.RelationTypeID == 2 ||  val.RelationTypeID == 5 {
+					childnameCaps = snakeCaseToCamelCase(val.ChildEntity.DisplayName)
+					childnameCaps = childnameCaps+"s"
+				}
 
-			for _,v:=range allInterRelation{
-				h.For(Id("_,v:=").Range().Id("models." + entityName + "InterRelation")).Block(
-					//Id("temp").Op(":=").Lit("Map").Id("+v"),
-					Var().Id("interData []models."+v),
-					//Id("dataType").Op(":=").Lit("[]models.").Id("+v.StructName"),
-					// Var().Id("interData").Id("dataType"),
-					Id("ResolveDeleteInterTable").Op(":=").Lit("ResolveDelete").Id("+v.StructName"),
-					//     Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-					Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"), Id("args.ID")).Dot("Find").Call(Id("&interData")),
+				if val.RelationTypeID == 3 || val.RelationTypeID == 6 {
+					childnameCaps = snakeCaseToCamelCase(val.InterEntity.DisplayName)
+					childnameCaps = childnameCaps + "s"
+				}
+				sliceForPreload = append(sliceForPreload,childnameCaps)
+			}
 
-					Id("delId").Op(":=").Id("interData"),
-					For(Id("_,v1:=").Range().Id("delId")).Block(
+			var finalId string
 
-						If(Id("v1.Id").Op("!=").Lit(0)).Block(
+			for _,childName := range sliceForPreload {
+				finalId = finalId + `Preload("`+childName+`").`
+				//finalId = finalId + tempId
+			}
+
+			g.If(Id("args.CascadeDelete").Op("==").True()).BlockFunc(func(h *Group) {
+
+				h.Var().Id("data models." + entityName)
+
+
+				h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Op(".").
+					Id(finalId).Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+
+				for _, val := range relationsParent {
+					//childNameLower := strings.ToLower(val.ChildEntity.DisplayName)
+					childNameCaps := snakeCaseToCamelCase(val.ChildEntity.DisplayName)
+					interNameCaps := snakeCaseToCamelCase(val.InterEntity.DisplayName)
+
+					if val.RelationTypeID == 1 || val.RelationTypeID == 4 {
+						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps)).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+						h.If(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id").Op("!=").Lit(0)).Block(
+							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args")),
+							Id("count++"),
+						)
+
+
+						h.Empty()
+						h.Empty()
+
+					}
+
+					if val.RelationTypeID == 2 || val.RelationTypeID == 5 {
+						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(childNameCaps + "s")).Block(
+							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args")),
 							Id("count++"),
 
-							Id("args.ID").Op("=").Qual(const_UtilsPath,const_UtilsUintToGraphId).Call(Id("v1.Id")),
-							//Id("ResolveDeleteInterTable").Call(Id("args")),
-							Qual("fmt","Sprint").Call(Id("ResolveDeleteInterTable+").Lit("(args)")),
+						)
+						h.Empty()
+						h.Empty()
+					}
 
-							//Id("response").Op("=").Id("count"),
-						),
+					if val.RelationTypeID == 3 || val.RelationTypeID == 6 {
+						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(interNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+
+						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(interNameCaps + "s")).Block(
+							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
+							Qual("", "ResolveDelete" + interNameCaps).Call(Id("args")),
+							Id("count++"),
+
+						)
+						h.Empty()
+						h.Empty()
+					}
+
+
+
+				}
+
+				fmt.Println("len :", entityName, len(allInterRelation), "inter :", allInterRelation)
+
+
+				h.Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
+					Qual(const_UtilsPath, const_UtilsConvertId).Call(
+						Id("tempID"),
 					),
-
+					//Id("args.CascadeDelete"),
 				)
+				h.Id("count++")
+				h.Id("response").Op("=").Id("&count")
+
+				h.Return(Id("response"))
+
+			})
+
+			g.Empty()
+			g.Empty()
+
+			g.Var().Id("flag").Int()
+			g.Var().Id("data").Id("models." + entityName)
+
+
+			g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Op(".").
+				Id(finalId).Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+
+
+			for _, val := range relationsParent {
+				//childNameLower := strings.ToLower(val.ChildEntity.DisplayName)
+				childNameCaps := snakeCaseToCamelCase(val.ChildEntity.DisplayName)
+				interNameCaps := snakeCaseToCamelCase(val.InterEntity.DisplayName)
+
+				if val.RelationTypeID == 1 || val.RelationTypeID == 4 {
+					//g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps)).Dot("Find").Call(Id("&data"))
+					g.If(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id").Op("!=").Lit(0)).Block(
+						Id("flag++"),
+					)
+
+					g.Empty()
+					g.Empty()
+
+				}
+
+				if val.RelationTypeID == 2 || val.RelationTypeID == 5 {
+					//g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps+"s")).Dot("Find").Call(Id("&data"))
+					g.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(childNameCaps + "s")).Block(
+						If(Id("v").Op(".").Id("Id").Op("!=").Lit(0)).Block(
+							Id("flag++"),
+						),
+					)
+					g.Empty()
+					g.Empty()
+				}
+
+
+				if val.RelationTypeID == 3 || val.RelationTypeID == 6 {
+					//g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(interNameCaps+"s")).Dot("Find").Call(Id("&data"))
+
+					g.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(interNameCaps + "s")).Block(
+						Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
+						Qual("", "ResolveDelete" + interNameCaps).Call(Id("args")),
+						Id("count++"),
+
+					)
+					g.Empty()
+					g.Empty()
+				}
+
 			}
 
 
-			//If(Id("del").Op("==").True()).Block(
-
-			h.Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
-				Qual(const_UtilsPath, const_UtilsConvertId).Call(
-					Id("args.ID"),
-				),
-				//Id("args.CascadeDelete"),
-			)
-			h.Id("count++")
-			h.Id("response").Op("=").Id("&count")
-
-			h.Return(Id("response"))
-			//),
-			//     Else().Block(
-			//     Id("del").Op("=").False(),
-			//     Id("response").Op("=").Id("&del"),
-			//     Return(Id("response")),
-			//),
-
-		})
-
-		g.Var().Id("flag").Int()
-		g.Var().Id("data").Id("models." + entityName)
-
-		g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "Children")).Block(
-
-			Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-			//Id("childEntity").Op(":=").Lit("data.").Id("+v"),
-
-			If(Qual("fmt","Sprint").Call(Lit("data.").Id("+v+").Lit(".id")).Op("==").Lit("")).Block(
-				Id("flag=1"),
-			),
-
-		)
-
-		for _,v:=range allInterRelation {
-
-			g.For(Id("_,v").Op(":=").Range().Id("models." + entityName + "InterRelation")).Block(
-
-				If().Id("v.StructName").Op("==").Lit(v).Block(
-					Var().Id("interData []models."+v),
-
-					//Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Id("v")).Dot("Find").Call(Id("&data")),
-					Qual(const_DatabasePath, "SQL.Model").Call(Lit("models.").Id("+v.StructName+").Lit("{}")).Dot("Joins").Call(Lit("inner join").Id("+data.TableName()+").Lit("on").Id("+data.TableName()+").Lit(".id=").Id("+v.TableName+").Lit(".").Id("+").Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id")).Dot("Where").Call(Qual("strings", "TrimPrefix").Call(Id("data.TableName()"), Lit("x_")).Id("+").Lit("_id").Id("+").Lit("=(?)"), Id("args.ID")).Dot("Find").Call(Id("&interData")),
-
-					//Id("temp").Op(":=").Lit("data.+v"),
-					If(Id("len(interData)").Op("==").Lit(0)).Block(
-						Id("flag=1"),
+			g.If(Id("flag").Op("==").Lit(0)).Block(
+				Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
+					Qual(const_UtilsPath, const_UtilsConvertId).Call(
+						Id("tempID"),
 					),
+					//Id("args.CascadeDelete"),
 				),
+				Id("count++"),
+				Id("response").Op("=").Id("&count"),
 
+
+			).Else().Block(
+				Comment("show error"),
+				Qual("fmt","Println").Call(Lit("Cannot Delete :"),Id("tempID")),
+				Id("del").Op("=").False(),
+				Id("response").Op("=").Id("&count"),
 			)
+			break
 		}
-		g.If(Id("flag").Op("==").Lit(1)).Block(
-			Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
-				Qual(const_UtilsPath, const_UtilsConvertId).Call(
-					Id("args.ID"),
-				),
-				//Id("args.CascadeDelete"),
-			),
-			Id("count++"),
-			Id("response").Op("=").Id("&count"),
-
-
-		).Else().Block(
-			Comment("show error"),
-			Id("del").Op("=").False(),
-			Id("response").Op("=").Id("&count"),
-		)
-
 		g.Return(Id("response"))
 	})
 

@@ -91,9 +91,16 @@ func createEntities(entity Entity, db *gorm.DB) string {
 			interEntity:=InterEntity{TableName:interName,StructName:interDispName}
 
 			//fmt.Println("parent ", relation.InterEntity.Name)
+
+			//fmt.Println("parent ", relation.InterEntity.Name)
 			name := snakeCaseToCamelCase(relation.ChildEntity.DisplayName)
+			interModelName := snakeCaseToCamelCase(relation.InterEntity.DisplayName)
+
+			entityNameLower := strings.ToLower(entityName)
 			childName := string(relation.ChildColumn.Name)
 			parentName := string(relation.ParentColumn.Name)
+			intername := string(entityNameLower+"_id")
+
 
 			d := " "
 			relType := "_normal"
@@ -123,8 +130,12 @@ func createEntities(entity Entity, db *gorm.DB) string {
 				//finalId := relationName + " []" + name + " `gorm:\"many2many:" + relation.InterEntity.Name + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
 				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
 				g.Id(finalId)
+
+				finalId = interModelName+"s" + " []" + interModelName +" `gorm:\"ForeignKey:" + intername + ";AssociationForeignKey:" + parentName +  "\" json:\"" + relation.InterEntity.DisplayName + "s,omitempty\"`"
+
+				g.Id(finalId)
 				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"ManyToMany", name, childName,InterEntity{}})
-			        entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", relationName, childName,interEntity})
+				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", relationName, childName,interEntity})
 
 
 			case 4: // Polymorphic OnetoOne
@@ -148,6 +159,10 @@ func createEntities(entity Entity, db *gorm.DB) string {
 				relationName := name + "s"
 				//finalId := relationName + " []" + name + " `gorm:\"many2many:" + relation.InterEntity.Name + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
 				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				g.Id(finalId)
+
+				finalId = interModelName+"s" + " []" + interModelName + " `gorm:\"ForeignKey:" + "type_id" + ";AssociationForeignKey:" + parentName + "\" json:\"" + relation.InterEntity.DisplayName + "s,omitempty\"`"
+
 				g.Id(finalId)
 				entityRelationsForEachEndpoint = append(entityRelationsForEachEndpoint, EntityRelation{"ManyToMany", name, childName,InterEntity{}})
 				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", relationName, childName,interEntity})
@@ -185,7 +200,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 				entityRelationsForAllEndpoint = append(entityRelationsForAllEndpoint, EntityRelation{"OneToMany", "", childName, interEntity})
 				relationName = name + "s"
 				//finalId := relationName + " []" + name + " `gorm:\"many2many:" + relation.InterEntity.Name + "\" json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
-				finalId := relationName + " []" + name + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
+				finalId := relationName + " []" + name + " `json:\"" + relation.ParentEntity.DisplayName + "s,omitempty\"`"
 				g.Id(finalId)
 				//finalInterId := interName + " []" + interName + " `json:\"" + relation.ChildEntity.DisplayName + "s,omitempty\"`"
 				//g.Id(finalInterId)
