@@ -827,7 +827,7 @@ func createResolver(resolverFile *File, allModels []string) {
 			//})).Params(Id("*" + strings.ToLower(val) + "Resolver")).
 		})).Params(Id("*int32")).
 			BlockFunc(func(g *Group) {
-			g.Return(Qual("", "ResolveDelete" + val)).Call(Id("args"))
+			g.Return(Qual("", "ResolveDelete" + val)).Call(Id("args"),Lit(""))
 		})
 
 	}
@@ -854,6 +854,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 	fmt.Println("dsfsd :", allInterRelation)
 
+	entityNameLower:=strings.ToLower(entityName)
 
 	relationsParent := []Relation{}
 	db.Preload("InterEntity").
@@ -872,13 +873,23 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 		Where("child_entity_id=?", entity.ID).
 		Find(&relationsChild)
 
+       // fmt.Println("child : ",relationsChild)
+
+	/*var args = ""
+	for _,val:= range relationsChild{
+		if val.RelationTypeID == 4 || val.RelationTypeID == 5 ||val.RelationTypeID == 6{
+			fmt.Println("ENTITY:",entity.DisplayName)
+			args =`name string`
+			break
+		}
+	}*/
 
 	resolverFile.Comment("For Delete")
 	resolverFile.Func().Id("ResolveDelete" + entityName).Params(Id("args").StructFunc(func(g *Group) {
 
 		g.Id("ID").Qual(const_GraphQlPath, "ID")
 		g.Id("CascadeDelete").Bool()
-	})).Params(Id("response *").Int32()).BlockFunc(func(g *Group) {
+	}),Id("name string")).Params(Id("response *").Int32()).BlockFunc(func(g *Group) {
 
 
 		resolverFile.Empty()
@@ -892,7 +903,8 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 			Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 				Qual(const_UtilsPath, const_UtilsConvertId).Call(
 					Id("args.ID"),
-				),
+				).Op(",").Id("name"),
+
 				//Id("args.CascadeDelete"),
 			),
 			If().Id("del").Op("==").True().Block(
@@ -949,11 +961,11 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 					childNameCaps := snakeCaseToCamelCase(val.ChildEntity.DisplayName)
 					interNameCaps := snakeCaseToCamelCase(val.InterEntity.DisplayName)
 
-					if val.RelationTypeID == 1 || val.RelationTypeID == 4 {
+					if val.RelationTypeID == 1 {
 						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps)).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 						h.If(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id").Op("!=").Lit(0)).Block(
 							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id")),
-							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"),Lit("")),
 							Id("count++"),
 						)
 
@@ -963,11 +975,11 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 					}
 
-					if val.RelationTypeID == 2 || val.RelationTypeID == 5 {
+					if val.RelationTypeID == 2  {
 						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(childNameCaps + "s")).Block(
 							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
-							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"),Lit("")),
 							Id("count++"),
 
 						)
@@ -975,12 +987,51 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 						h.Empty()
 					}
 
-					if val.RelationTypeID == 3 || val.RelationTypeID == 6 {
+					if val.RelationTypeID == 3  {
 						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(interNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 
 						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(interNameCaps + "s")).Block(
 							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
-							Qual("", "ResolveDelete" + interNameCaps).Call(Id("args")),
+							Qual("", "ResolveDelete" + interNameCaps).Call(Id("args"),Lit("")),
+							Id("count++"),
+
+						)
+						h.Empty()
+						h.Empty()
+					}
+
+					if val.RelationTypeID == 4 {
+						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps)).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+						h.If(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id").Op("!=").Lit(0)).Block(
+							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"),Lit(entityNameLower)),
+							Id("count++"),
+						)
+
+
+						h.Empty()
+						h.Empty()
+
+					}
+
+					if val.RelationTypeID == 5 {
+						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(childNameCaps + "s")).Block(
+							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"),Lit(entityNameLower)),
+							Id("count++"),
+
+						)
+						h.Empty()
+						h.Empty()
+					}
+
+					if val.RelationTypeID == 6 {
+						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(interNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+
+						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(interNameCaps + "s")).Block(
+							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
+							Qual("", "ResolveDelete" + interNameCaps).Call(Id("args"),Lit(entityNameLower)),
 							Id("count++"),
 
 						)
@@ -998,7 +1049,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 				h.Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 					Qual(const_UtilsPath, const_UtilsConvertId).Call(
 						Id("tempID"),
-					),
+					).Op(",").Id("name"),
 					//Id("args.CascadeDelete"),
 				)
 				h.Id("count++")
@@ -1018,11 +1069,11 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 			g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Op(".").
 				Id(finalId).Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 
-
+/////////////////////////////////////
 			for _, val := range relationsParent {
 				//childNameLower := strings.ToLower(val.ChildEntity.DisplayName)
 				childNameCaps := snakeCaseToCamelCase(val.ChildEntity.DisplayName)
-				interNameCaps := snakeCaseToCamelCase(val.InterEntity.DisplayName)
+//				interNameCaps := snakeCaseToCamelCase(val.InterEntity.DisplayName)
 
 				if val.RelationTypeID == 1 || val.RelationTypeID == 4 {
 					//g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps)).Dot("Find").Call(Id("&data"))
@@ -1050,11 +1101,10 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 				if val.RelationTypeID == 3 || val.RelationTypeID == 6 {
 					//g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(interNameCaps+"s")).Dot("Find").Call(Id("&data"))
 
-					g.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(interNameCaps + "s")).Block(
-						Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
-						Qual("", "ResolveDelete" + interNameCaps).Call(Id("args")),
-						Id("count++"),
-
+					g.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(childNameCaps + "s")).Block(
+						If(Id("v").Op(".").Id("Id").Op("!=").Lit(0)).Block(
+							Id("flag++"),
+						),
 					)
 					g.Empty()
 					g.Empty()
@@ -1067,7 +1117,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 				Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 					Qual(const_UtilsPath, const_UtilsConvertId).Call(
 						Id("tempID"),
-					),
+					).Op(",").Id("name"),
 					//Id("args.CascadeDelete"),
 				),
 				Id("count++"),

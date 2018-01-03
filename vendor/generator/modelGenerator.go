@@ -294,7 +294,7 @@ func createEntities(entity Entity, db *gorm.DB) string {
 
 	createEntitiesPutMethod(modelFile, entityName, putMethodName, controllerFile)
 
-	createEntitiesDeleteMethod(modelFile, entityName, deleteMethodName, controllerFile)
+	createEntitiesDeleteMethod(modelFile, entityName,entity, deleteMethodName, controllerFile,db)
 
 	createResolverFieldFunctions(modelFile, entity, database.SQL)
 
@@ -617,19 +617,55 @@ func createEntitiesPutMethod(modelFile *File, entityName string, methodName stri
 	)
 }
 
-func createEntitiesDeleteMethod(modelFile *File, entityName string, methodName string, controllerFile *File) {
+func createEntitiesDeleteMethod(modelFile *File, entityName string, entity Entity, methodName string, controllerFile *File,db *gorm.DB) {
+
+	entityNameLower:= strings.ToLower(entityName)
+fmt.Println("ENTITY NSMAEE :",entity , entityName)
+	relationsParent := []Relation{}
+	db.Preload("InterEntity").
+		Preload("ChildEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("parent_entity_id=?", entity.ID).
+		Find(&relationsParent)
+
+	//fetch relations of this entity matching child
+	relationsChild := []Relation{}
+	db.Preload("InterEntity").
+		Preload("ParentEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("child_entity_id=?", entity.ID).
+		Find(&relationsChild)
+
+	typecol:=entityNameLower+"_type=(?)"
+
+	if entityName == "ProductSalePhone"{
+		typecol = "sale_type=(?)"
+	}
 
 	parent := Entity{}
 	database.SQL.Where("c_entity.display_name = (?)", entityName).Find(&parent)   //current parent
-
 	modelFile.Empty()
 	//write delete method
 	modelFile.Comment("This method will delete " + entityName + " based on id")
-	modelFile.Func().Id(methodName).Params(Id("ID").Uint()).Bool().Block(
+	modelFile.Func().Id(methodName).Params(Id("ID").Uint(),Id("parent").String()).Bool().Block(
 		//Id("data").Op(":=").Id(entityName).Op("{").Id("Id").Op(":").Id("ID").Op("}"),
 		Var().Id("data").Id(entityName),
 		Var().Id("del").Bool(),
-		Qual(const_DatabasePath, "SQL.Where").Call(Lit(parent.Name + ".id=(?)"), Id("ID")).Dot("First").Call(Id("&").Id("data")),
+		If(Id("parent")).Op("==").Lit("").Block(
+
+			Qual(const_DatabasePath, "SQL.Where").Call(Lit(parent.Name + ".id=(?)"), Id("ID")).Dot("First").Call(Id("&").Id("data")),
+
+
+		).Else().Block(
+
+			Qual(const_DatabasePath, "SQL.Where").Call(Lit(parent.Name + ".id=(?)"), Id("ID")).Dot("Where").
+				Call(Lit(parent.Name+"."+typecol),Id("parent")).Dot("First").Call(Id("&").Id("data")),
+
+
+		),
+		//Qual(const_DatabasePath, "SQL.Where").Call(Lit(parent.Name + ".id=(?)"), Id("ID")).Dot("First").Call(Id("&").Id("data")),
 		If(Id("data.Id").Op("!=").Id("0")).Block(
 			Qual(const_DatabasePath, "SQL.Delete").Call(Id("&").Id("data")),
 

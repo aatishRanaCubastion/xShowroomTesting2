@@ -142,6 +142,7 @@ func GenerateCode(appName string) {
 
 	//fetch all entities
 	entities := []Entity{}
+
 	database.SQL.Preload("Columns.ColumnType").
 		Find(&entities)
 
