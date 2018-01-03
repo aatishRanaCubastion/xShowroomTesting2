@@ -285,8 +285,8 @@
             "IsNull":1
           },
           {
-            "Name": "rel_prod_id",
-            "DisplayName": "RelProdId",
+            "Name": "related_product_group_id",
+            "DisplayName": "RelatedProductGroupId",
             "Type": 1,
             "Size": 30,
             "IsNull":1
