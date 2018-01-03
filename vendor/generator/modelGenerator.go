@@ -465,34 +465,86 @@ func createEntitiesGetMethod(modelFile *File, entityName string, methodName stri
 
 func createEntitiesPostMethod(modelFile *File, entityName string, entity Entity,methodName string, entityFields []EntityField, controllerFile *File,db *gorm.DB) {
 
+	/*relationsParent := []Relation{}
+	db.Preload("InterEntity").
+		Preload("ChildEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("parent_entity_id=?", entity.ID).
+		Find(&relationsParent)
+
+	//fetch relations of this entity matching child
+	relationsChild := []Relation{}
+	db.Preload("InterEntity").
+		Preload("ParentEntity").
+		Preload("ChildColumn").
+		Preload("ParentColumn").
+		Where("child_entity_id=?", entity.ID).
+		Find(&relationsChild)
+	*/
+
+
+	var relation Relation
+	var cols []Column
+	var columns []string
+	db.Where("inter_entity_id=?",entity.ID).Find(&relation)
+	db.Where("entity_id=?",entity.ID).Find(&cols)
+
+	for _,val:=range cols{
+		columns = append(columns,val.DisplayName)
+	}
+
+
+
 
 	modelFile.Empty()
 	//write insert method
 	modelFile.Comment("This method will insert one " + entityName + " in db")
 
-		if entity.DisplayName=="ProductProductGroup"{
-			modelFile.Func().Id(methodName).Params(Id("data").Id(entityName)).Id(entityName).Block(
-				Var().Id("oldData").Id("[]"+entity.DisplayName),
-				Qual(const_DatabasePath,"SQL.Find").Call(Id("&oldData")),
+	if relation.InterEntityID != 0 && relation.RelationTypeID ==3{
 
-				For(Id("_ ,").Id("val").Op(":=").Range().Id("oldData")).Block(
+		modelFile.Func().Id(methodName).Params(Id("data").Id(entityName)).Id(entityName).Block(
+			Var().Id("oldData").Id("[]"+entity.DisplayName),
+			Qual(const_DatabasePath,"SQL.Find").Call(Id("&oldData")),
 
-					If(Id("val").Dot("ProductId").Op("==").Id("data").Dot("ProductId").Op("&&").
-					Id("val").Dot("RelProdId").Op("==").Id("data").Dot("RelProdId")).Block(
+			For(Id("_ ,").Id("val").Op(":=").Range().Id("oldData")).Block(
 
-						Return( Id(entity.DisplayName+"{}")),
-					),
+				If(Id("val").Dot(columns[1]).Op("==").Id("data").Dot(columns[1]).Op("&&").
+					Id("val").Dot(columns[2]).Op("==").Id("data").Dot(columns[2])).Block(
+
+					Return( Id(entity.DisplayName+"{}")),
 				),
+			),
 
+			Qual(const_DatabasePath, "SQL.Create").Call(Id("&").Id("data")),
+			Return(Id("data")),
+		)
+
+	}else if relation.InterEntityID != 0 && relation.RelationTypeID ==6 {
+		modelFile.Func().Id(methodName).Params(Id("data").Id(entityName)).Id(entityName).Block(
+			Var().Id("oldData").Id("[]" + entity.DisplayName),
+			Qual(const_DatabasePath, "SQL.Find").Call(Id("&oldData")),
+
+			For(Id("_ ,").Id("val").Op(":=").Range().Id("oldData")).Block(
+
+				If(Id("val").Dot(columns[1]).Op("==").Id("data").Dot(columns[1]).Op("&&").
+					Id("val").Dot(columns[2]).Op("==").Id("data").Dot(columns[2]).Op("&&").
+					Id("val").Dot(columns[3]).Op("==").Id("data").Dot(columns[3])).Block(
+
+					Return(Id(entity.DisplayName + "{}")),
+				),
+			),
+
+			Qual(const_DatabasePath, "SQL.Create").Call(Id("&").Id("data")),
+			Return(Id("data")),
+		)
+
+	}else{
+		modelFile.Func().Id(methodName).Params(Id("data").Id(entityName)).Id(entityName).Block(
 				Qual(const_DatabasePath, "SQL.Create").Call(Id("&").Id("data")),
 				Return(Id("data")),
 			)
-		}else {
-			modelFile.Func().Id(methodName).Params(Id("data").Id(entityName)).Id(entityName).Block(
-				Qual(const_DatabasePath, "SQL.Create").Call(Id("&").Id("data")),
-				Return(Id("data")),
-			)
-		}
+	}
 
 
 

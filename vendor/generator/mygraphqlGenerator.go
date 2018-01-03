@@ -304,7 +304,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 					}
 
 					if column.ColumnType.Type == "int" && strings.HasSuffix(column.Name,"_id"){
-						d[Id(fieldNameCaps)] = Qual(const_UtilsPath,const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+						//d[Id(fieldNameCaps)] = Qual(const_UtilsPath,const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
 						continue
 					}
 					if column.ColumnType.Type == "varchar" && strings.HasSuffix(column.Name,"_type"){
@@ -343,7 +343,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		g.Return(Id(entityNameLower + "Model"))
 	})
 
-	//reverse kiran mapper method
+	//reverse mapper method used in field resolvers
 
 	resolverFile.Func().Id("ReverseMap2" + entityName).Params(Id("struct" + entityName).Id("*"+entityNameLower)).Params(Qual(const_ModelsPath,entityName)).BlockFunc(func(g *Group) {
 		g.Empty()
@@ -560,7 +560,6 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 				for _,v:=range col{
 					colName = append(colName,v.DisplayName)
 				}
-				fmt.Println(colName)
 
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
@@ -627,7 +626,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 					),
 				)
-			} else if val.RelationTypeID == 5 || val.RelationTypeID == 6 {
+			} else if val.RelationTypeID == 5{
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName + "s").Op("!=").Nil()).Block(
@@ -667,6 +666,104 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
 								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 								Params(Id(childNameLower)))),
+
+						),
+
+					),
+				)
+			}else if val.RelationTypeID == 6 {
+
+				interEntity:=val.InterEntity.DisplayName
+				interEntityLower:=strings.ToLower(val.InterEntity.DisplayName)
+
+				var col []Column
+				var colName []string
+				database.SQL.Where("entity_id=?",val.InterEntity.ID).Find(&col)
+
+				for _,v:=range col{
+					colName = append(colName,v.DisplayName)
+				}
+
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName + "s").Op("!=").Nil()).Block(
+
+					For(Id("_ ,").Id("dev").Op(":=").Range().Id("*args").Dot(entityName).Dot(childName + "s")).Block(
+
+
+						If(Id("dev").Dot("Id").Op("==").Nil()).Block(
+							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+
+							If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+								Qual(const_UtilsPath,const_UtilsConvertId).
+								Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+								Comment("todo throw error"),
+								Return(Id("&"+entityNameLower+"Resolver{}")),							),
+
+							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
+								Call(Id(entityNameLower).Dot("id")),
+							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+								Params(Id(childNameLower)))),
+							Empty(),
+							Empty(),
+							Var().Id("data").Op("=").Id(interEntityLower+"Input{}"),
+							Id(interEntityLower).Op(":=").Id("ReverseMap"+interEntity).Call(Id("&data")),
+							Id(entityNameLower+"Id").Op(":=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+
+							Var().Id(childNameLower+"Id").Uint(),
+
+							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower+"s")).Block(
+
+								Id(childNameLower+"Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("val").Dot("id")),
+							),
+
+							Id(interEntityLower).Dot(colName[1]).Op("=").Id(childNameLower+"Id"),
+							Id(interEntityLower).Dot(colName[2]).Op("=").Id(entityNameLower+"Id"),
+							Id(interEntityLower).Dot(colName[3]).Op("=").Lit(entityNameLower),
+
+
+							Id("models").Dot("Post"+interEntity).Call(Id(interEntityLower)),
+							Empty(),
+							Empty(),
+
+
+						).Else().Block(
+
+							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+
+							If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
+								Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+								Comment("todo throw error"),
+								Return(Id("&"+entityNameLower+"Resolver{}")),							),
+
+							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
+								Call(Id(entityNameLower).Dot("id")),
+							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+								Params(Id(childNameLower)))),
+							Empty(),
+							Empty(),
+							Var().Id("data").Op("=").Id(interEntityLower+"Input{}"),
+							Id(interEntityLower).Op(":=").Id("ReverseMap"+interEntity).Call(Id("&data")),
+							Id(entityNameLower+"Id").Op(":=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+
+							Var().Id(childNameLower+"Id").Uint(),
+
+							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower+"s")).Block(
+
+								Id(childNameLower+"Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("val").Dot("id")),
+							),
+
+							Id(interEntityLower).Dot(colName[1]).Op("=").Id(childNameLower+"Id"),
+							Id(interEntityLower).Dot(colName[2]).Op("=").Id(entityNameLower+"Id"),
+							Id(interEntityLower).Dot(colName[3]).Op("=").Lit(entityNameLower),
+
+
+							Id("models").Dot("Post"+interEntity).Call(Id(interEntityLower)),
+							Empty(),
+							Empty(),
 
 						),
 
