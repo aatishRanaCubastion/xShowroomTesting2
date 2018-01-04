@@ -1102,10 +1102,9 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 					//g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(interNameCaps+"s")).Dot("Find").Call(Id("&data"))
 
 					g.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(interNameCaps + "s")).Block(
-						Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
-						Qual("", "ResolveDelete" + interNameCaps).Call(Id("args")),
-						Id("count++"),
-
+						If(Id("v").Op(".").Id("Id").Op("!=").Lit(0)).Block(
+							Id("flag++"),
+						),
 					)
 					g.Empty()
 					g.Empty()

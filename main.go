@@ -71,6 +71,7 @@ func upsertSampleData() {
 					DisplayName: val.Fields[j].DisplayName,
 					TypeID:      val.Fields[j].Type,
 					Size:        val.Fields[j].Size,
+					IsNull:      val.Fields[j].IsNull,
 					EntityID:    entity.ID,
 				}
 				database.SQL.Create(&col)
