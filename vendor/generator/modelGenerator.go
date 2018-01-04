@@ -632,16 +632,14 @@ func createEntitiesDeleteMethod(modelFile *File, entityName string, entity Entit
 
 			for _, col:= range entity.Columns{
 				if strings.HasSuffix(col.Name,"_type"){
-					typecol = col.Name
+					typecol = col.Name+"=(?)"
 				}
 			}
 		}
 	}
-	
 
-	if entityName == "ProductSalePhone"{
-		typecol = "sale_type=(?)"
-	}
+
+
 
 	parent := Entity{}
 	database.SQL.Where("c_entity.display_name = (?)", entityName).Find(&parent)   //current parent
