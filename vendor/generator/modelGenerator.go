@@ -620,25 +620,24 @@ func createEntitiesPutMethod(modelFile *File, entityName string, methodName stri
 func createEntitiesDeleteMethod(modelFile *File, entityName string, entity Entity, methodName string, controllerFile *File,db *gorm.DB) {
 
 	entityNameLower:= strings.ToLower(entityName)
-fmt.Println("ENTITY NSMAEE :",entity , entityName)
-	relationsParent := []Relation{}
-	db.Preload("InterEntity").
-		Preload("ChildEntity").
-		Preload("ChildColumn").
-		Preload("ParentColumn").
-		Where("parent_entity_id=?", entity.ID).
-		Find(&relationsParent)
-
-	//fetch relations of this entity matching child
-	relationsChild := []Relation{}
-	db.Preload("InterEntity").
-		Preload("ParentEntity").
-		Preload("ChildColumn").
-		Preload("ParentColumn").
-		Where("child_entity_id=?", entity.ID).
-		Find(&relationsChild)
 
 	typecol:=entityNameLower+"_type=(?)"
+
+	var rel []Relation
+	db.Find(&rel)
+
+
+	for _,val:= range rel{
+		if entity.ID == val.InterEntityID && val.RelationTypeID == 6 {
+
+			for _, col:= range entity.Columns{
+				if strings.HasSuffix(col.Name,"_type"){
+					typecol = col.Name
+				}
+			}
+		}
+	}
+	
 
 	if entityName == "ProductSalePhone"{
 		typecol = "sale_type=(?)"
