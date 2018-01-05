@@ -71,6 +71,7 @@ func upsertSampleData() {
 					DisplayName: val.Fields[j].DisplayName,
 					TypeID:      val.Fields[j].Type,
 					Size:        val.Fields[j].Size,
+					IsNull:      val.Fields[j].IsNull,
 					EntityID:    entity.ID,
 				}
 				database.SQL.Create(&col)
@@ -85,7 +86,6 @@ func upsertSampleData() {
 		inter:=generator.Entity{}
 		parentField := generator.Column{}
 		childField := generator.Column{}
-
 		parentErr := database.SQL.First(&parent, "name=(?)", val.ParentEntity).Error
 		childErr := database.SQL.First(&child, "name=(?)", val.ChildEntity).Error
 
@@ -114,6 +114,7 @@ func upsertSampleData() {
 			ChildEntityColID:  childField.ID,
 			InterEntityID:	   interId,
 			RelationTypeID:    app.Relations[k].Type,
+
 		}
 
 		database.SQL.Create(&relation)
