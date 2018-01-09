@@ -1,7 +1,6 @@
 package utils
 
-import
-(
+import (
 	"strconv"
 	"github.com/neelance/graphql-go"
 	"strings"
@@ -33,10 +32,9 @@ func RuneToGraphId(ID rune) graphql.ID {
 	return graphql.ID(str)
 }
 
-
 func Int32ToUint(ID int32) uint {
 	str := fmt.Sprint(ID)
-	str2:=StringToUInt(str)
+	str2 := StringToUInt(str)
 	return str2
 }
 

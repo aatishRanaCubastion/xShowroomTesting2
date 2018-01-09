@@ -1,0 +1,475 @@
+{
+  "Database": {
+    "Type": "MySQL",
+    "MySQL": {
+      "Username": "root",
+      "Password": "password",
+      "Name": "SampleAppV2",
+      "Hostname": "127.0.0.1",
+      "Port": 3306,
+      "Parameter": "?parseTime=true"
+    }
+  },
+  "Email": {
+    "Username": "",
+    "Password": "",
+    "Hostname": "",
+    "Port": 25,
+    "From": ""
+  },
+  "Server": {
+    "Hostname": "",
+    "UseHTTP": true,
+    "UseHTTPS": false,
+    "HTTPPort": 9000,
+    "HTTPSPort": 443,
+    "CertFile": "tls/server.crt",
+    "KeyFile": "tls/server.key"
+  },
+  "AppInfo": {
+    "_comment": "This is a sample data for generating the application, if your schema is not ready yet you can empty this and add you app entities data later.",
+    "Name": "SampleApp",
+    "Entities": [
+      {
+        "Name": "x_asset",
+        "DisplayName": "Asset",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          },
+          {
+            "Name": "location",
+            "DisplayName": "Location",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          }
+        ]
+      },
+      {
+        "Name": "x_position",
+        "DisplayName": "Position",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          },
+          {
+            "Name": "level",
+            "DisplayName": "Level",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          },
+          {
+            "Name": "asset_id",
+            "DisplayName": "AssetId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          }
+        ]
+      },
+      {
+        "Name": "x_catalog",
+        "DisplayName": "Catalog",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "status",
+            "DisplayName": "Status",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          }
+        ]
+      },
+      {
+        "Name": "x_sale",
+        "DisplayName": "Sale",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          },
+          {
+            "Name": "catalog_id",
+            "DisplayName": "CatalogId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          }
+        ]
+      },
+      {
+        "Name": "x_demo",
+        "DisplayName": "Demo",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          }
+        ]
+      },
+      {
+        "Name": "x_demo_group",
+        "DisplayName": "DemoGroup",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          }
+        ]
+      },
+      {
+        "Name": "x_profile",
+        "DisplayName": "Profile",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "profile_number",
+            "DisplayName": "ProfileNumber",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          },
+          {
+            "Name": "type_id",
+            "DisplayName": "TypeId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "profile_type",
+            "DisplayName": "ProfileType",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":1
+          }
+        ]
+      },
+      {
+        "Name": "x_account",
+        "DisplayName": "Account",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          },
+          {
+            "Name": "type_id",
+            "DisplayName": "TypeId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "account_type",
+            "DisplayName": "AccountType",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":1
+          }
+        ]
+      },{
+        "Name": "x_phone",
+        "DisplayName": "Phone",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "phone_number",
+            "DisplayName": "PhoneNumber",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          }
+        ]
+      },
+      {
+        "Name": "x_organisation",
+        "DisplayName": "Organisation",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          },
+          {
+            "Name": "location",
+            "DisplayName": "Location",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          }
+        ]
+      },
+      {
+        "Name": "x_demo_demo_group",
+        "DisplayName": "DemoDemoGroup",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "demo_id",
+            "DisplayName": "DemoId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "demo_group_id",
+            "DisplayName": "DemoGroupId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          }
+        ]
+      },
+      {
+        "Name": "x_demo_phone_profile",
+        "DisplayName": "DemoPhoneProfile",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "phone_id",
+            "DisplayName": "PhoneId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "type_id",
+            "DisplayName": "TypeId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "phone_type",
+            "DisplayName": "PhoneType",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":1
+          }
+        ]
+      }
+    ],
+    "Relations": [
+      {
+        "ParentEntity": "x_asset",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_position",
+        "ChildEntityField": "asset_id",
+        "Pivot": "",
+        "Type": 1
+      },
+      {
+        "ParentEntity": "x_catalog",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_sale",
+        "ChildEntityField": "catalog_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "x_demo",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_demo_group",
+        "ChildEntityField": "id",
+        "Pivot": "x_demo_demo_group",
+        "Type": 3
+      },
+      {
+        "ParentEntity": "x_asset",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_profile",
+        "ChildEntityField": "type_id",
+        "Pivot": "",
+        "Type": 4
+      },
+      {
+        "ParentEntity": "x_catalog",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_profile",
+        "ChildEntityField": "type_id",
+        "Pivot": "",
+        "Type": 4
+      },
+      {
+        "ParentEntity": "x_catalog",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_account",
+        "ChildEntityField": "type_id",
+        "Pivot": "",
+        "Type": 5
+      },
+      {
+        "ParentEntity": "x_organisation",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_account",
+        "ChildEntityField": "type_id",
+        "Pivot": "",
+        "Type": 5
+      },
+      {
+        "ParentEntity": "x_demo",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_phone",
+        "ChildEntityField": "id",
+        "Pivot": "x_demo_phone_profile",
+        "Type": 6
+      },
+      {
+        "ParentEntity": "x_profile",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_phone",
+        "ChildEntityField": "id",
+        "Pivot": "x_demo_phone_profile",
+        "Type": 6
+      }
+    ],
+    "FieldTypes": [
+      {
+        "Id": 1,
+        "Name": "int"
+      },
+      {
+        "Id": 2,
+        "Name": "varchar"
+      }
+    ],
+    "RelationTypes": [
+      {
+        "Id": 1,
+        "Name": "OneToOne"
+      },
+      {
+        "Id": 2,
+        "Name": "OneToMany"
+      },
+      {
+        "Id": 3,
+        "Name": "ManyToMany"
+      },
+      {
+        "Id": 4,
+        "Name": "PolyOneToOne"
+      },
+      {
+        "Id": 5,
+        "Name": "PolyOneToMany"
+      },
+      {
+        "Id": 6,
+        "Name": "PolyManyToMany"
+      }
+    ]
+  }
+}

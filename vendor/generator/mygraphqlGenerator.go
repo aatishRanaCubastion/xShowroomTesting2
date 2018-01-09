@@ -925,7 +925,8 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 			for _ , val :=  range relationsParent{
 
 				var childnameCaps string
-				if val.RelationTypeID == 1 || val.RelationTypeID == 4 {
+ // val.RelationTypeID == 4
+				if val.RelationTypeID == 1 {
 					childnameCaps = snakeCaseToCamelCase(val.ChildEntity.DisplayName)
 				}
 				if val.RelationTypeID == 2 ||  val.RelationTypeID == 5 {
@@ -943,7 +944,9 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 			var finalId string
 
 			for _,childName := range sliceForPreload {
-				finalId = finalId + `Preload("`+childName+`").`
+				if childName!=""{
+					finalId = finalId + `Preload("`+childName+`").`
+				}
 				//finalId = finalId + tempId
 			}
 
@@ -958,6 +961,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 				for _, val := range relationsParent {
 					//childNameLower := strings.ToLower(val.ChildEntity.DisplayName)
 					childNameCaps := snakeCaseToCamelCase(val.ChildEntity.DisplayName)
+					childNameLower := strings.ToLower(val.ChildEntity.DisplayName)
 					interNameCaps := snakeCaseToCamelCase(val.InterEntity.DisplayName)
 
 					if val.RelationTypeID == 1 {
@@ -1001,8 +1005,17 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 					if val.RelationTypeID == 4 {
 						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps)).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
-						h.If(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id").Op("!=").Lit(0)).Block(
-							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id")),
+
+						//var dataPhone models.Phone
+						//database.SQL.Model(models.Phone{}).Where("type_id=(?) AND phone_type=(?)",utils.ConvertId(tempID),"user").Find(&dataPhone)
+
+                                                h.Var().Id("data"+childNameCaps).Id("models."+childNameCaps)
+						h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + childNameCaps).Values()).Op(".").
+							Id("Where").Call(Lit("type_id=? AND "+childNameLower+"_type=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("tempID")).Op(",").Lit(entityNameLower)).
+							Dot("Find").Call(Id("&data"+childNameCaps))
+                                                h.Empty()
+						h.If(Id("data"+childNameCaps).Op(".").Id("Id").Op("!=").Lit(0)).Block(
+							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("data"+childNameCaps).Op(".").Id("Id")),
 							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"),Lit(entityNameLower)),
 							Id("count++"),
 						)
