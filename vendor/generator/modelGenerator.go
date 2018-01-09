@@ -678,7 +678,7 @@ func createEntitiesDeleteMethod(modelFile *File, entityName string, entity Entit
 		Comment("Get the parameter id"),
 		Id("params").Op(":=").Qual(const_RouterPath, "Params").Call(Id("req")),
 		Id("ID").Op(":=").Qual("", "params.ByName").Call(Lit("id")),
-		Id("data").Op(":=").Qual(const_ModelsPath, methodName).Call(Qual(const_UtilsPath, const_UtilsStringToUInt).Call(Id("ID"))),
+		Id("data").Op(":=").Qual(const_ModelsPath, methodName).Call(Qual(const_UtilsPath, const_UtilsStringToUInt).Call(Id("ID")),Lit("")),
 		setJsonHeader(),
 		sendResponse(Id("data")),
 	)
@@ -788,7 +788,7 @@ func createResolverFieldFunctions(modelFile *File, entity Entity, db *gorm.DB) {
 			})
 		}
 
-		if val.RelationTypeID == 4 || val.RelationTypeID == 5 {
+		if val.RelationTypeID == 4 || val.RelationTypeID == 5{
 			modelFile.Func().Id("Get" + entityName + "Of" + childNameCaps).Params(Id(childNameLower).Id(childNameCaps)).Id(entityName).BlockFunc(func(g *Group) {
 				g.Id("data").Op(":=").Id(entityName).Block()
 				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").
@@ -854,7 +854,7 @@ func createResolverFieldFunctions(modelFile *File, entity Entity, db *gorm.DB) {
 
 
 
-		if val.RelationTypeID == 1 || val.RelationTypeID ==4{
+		if val.RelationTypeID == 1 {
 			modelFile.Func().Id("Get" + entityName + "Of" + parentNameCaps).Params(Id(parentNameLower + "id").Uint()).Id(entityName).BlockFunc(func(g *Group) {
 				g.Id("data").Op(":=").Id(parentNameCaps).Block()
 				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").Id("Preload").Params(Lit(entityName)).Op(".").
@@ -863,12 +863,30 @@ func createResolverFieldFunctions(modelFile *File, entity Entity, db *gorm.DB) {
 			})
 		}
 
-		if val.RelationTypeID == 2 || val.RelationTypeID == 5{
+		if val.RelationTypeID == 4 {
+			modelFile.Func().Id("Get" + entityName + "Of" + parentNameCaps).Params(Id(parentNameLower + "id").Uint()).Id(entityName).BlockFunc(func(g *Group) {
+				g.Id("data").Op(":=").Id(entityName).Block()
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").
+					Id("Where").Params(Lit("type_id = ? AND "+entityNameLower+"_type = ?").Op(",").Id(parentNameLower + "id").Op(",").Lit(parentNameLower)).Op(".").Id("Find").Params(Id("&data"))
+				g.Return(Id("data"))
+			})
+		}
+
+		if val.RelationTypeID == 2 {
 			modelFile.Func().Id("Get" + entityName + "sOf" + parentNameCaps).Params(Id(parentNameLower + "id").Uint()).Id("[]" + entityName).BlockFunc(func(g *Group) {
 				g.Id("data").Op(":=").Id(parentNameCaps).Block()
 				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").Id("Preload").Params(Lit(entityName+"s")).Op(".").
 					Id("Where").Params(Lit("id = ?").Op(",").Id(parentNameLower + "id")).Op(".").Id("Find").Params(Id("&data"))
 				g.Return(Id("data").Op(".").Id(entityName + "s"))
+			})
+		}
+
+		if val.RelationTypeID == 5 {
+			modelFile.Func().Id("Get" + entityName + "sOf" + parentNameCaps).Params(Id(parentNameLower + "id").Uint()).Id("[]" + entityName).BlockFunc(func(g *Group) {
+				g.Id("data").Op(":=[]").Id(entityName).Block()
+				g.Qual(const_DatabasePath, "SQL").Op(".").Id("Debug").Params().Op(".").
+					Id("Where").Params(Lit("type_id = ? AND "+entityNameLower+"_type = ?").Op(",").Id(parentNameLower + "id").Op(",").Lit(parentNameLower)).Op(".").Id("Find").Params(Id("&data"))
+				g.Return(Id("data"))
 			})
 		}
 

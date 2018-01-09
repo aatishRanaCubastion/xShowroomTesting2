@@ -394,7 +394,6 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 
 
-
 	resolverFile.Func().Id("ResolveCreate" + entityName).Params(Id("args").Id("*").StructFunc(func(g *Group) {
 
 		g.Id(entityName + " *").Id(entityNameLower + "Input")
@@ -421,7 +420,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 			var childName = val.ChildEntity.DisplayName
 			var childNameLower = strings.ToLower(val.ChildEntity.DisplayName)
 
-			if val.RelationTypeID == 1 {
+			if val.RelationTypeID == 1 {		// One to One
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName).Op("!=").Nil()).Block(
@@ -463,7 +462,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 				)
 
-			} else if val.RelationTypeID == 4 {
+			} else if val.RelationTypeID == 4 {	//Poly One to One
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName).Op("!=").Nil()).Block(
@@ -506,7 +505,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 				)
 
-			} else if val.RelationTypeID == 2 {
+			} else if val.RelationTypeID == 2 {	//One to Many
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName + "s").Op("!=").Nil()).Block(
@@ -548,7 +547,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 					),
 				)
-			} else if val.RelationTypeID == 3 {
+			} else if val.RelationTypeID == 3 {	//Many to Many
 
 				interEntity:=val.InterEntity.DisplayName
 				interEntityLower:=strings.ToLower(val.InterEntity.DisplayName)
@@ -626,7 +625,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 					),
 				)
-			} else if val.RelationTypeID == 5{
+			} else if val.RelationTypeID == 5{	//Poly One to Many
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName + "s").Op("!=").Nil()).Block(
@@ -671,7 +670,7 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 					),
 				)
-			}else if val.RelationTypeID == 6 {
+			}else if val.RelationTypeID == 6 {		//Poly Many to Many
 
 				interEntity:=val.InterEntity.DisplayName
 				interEntityLower:=strings.ToLower(val.InterEntity.DisplayName)
@@ -699,9 +698,9 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 								Comment("todo throw error"),
 								Return(Id("&"+entityNameLower+"Resolver{}")),							),
 
-							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
+							/*Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")),
-							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
+							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),*/
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
 								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
 								Params(Id(childNameLower)))),
@@ -737,9 +736,9 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 								Comment("todo throw error"),
 								Return(Id("&"+entityNameLower+"Resolver{}")),							),
 
-							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
-								Call(Id(entityNameLower).Dot("id")),
-							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
+							//Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
+							//	Call(Id(entityNameLower).Dot("id")),
+							//Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
 								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 								Params(Id(childNameLower)))),
