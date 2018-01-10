@@ -9,8 +9,7 @@ import (
 	"database"
 )
 
-func createEntitiesResolver(resolverFile *File, entityName string, entity Entity, db *gorm.DB,entityRelationsForAllEndpoint []EntityRelation) {
-
+func createEntitiesResolver(resolverFile *File, entityName string, entity Entity, db *gorm.DB, entityRelationsForAllEndpoint []EntityRelation) {
 
 	var childOfEntity = []Relation{}
 	db.Preload("InterEntity").
@@ -53,9 +52,12 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 			if child.RelationTypeID == 3 || child.RelationTypeID == 6 {
 				g.Id(fieldTypeLower + "s").Op("[]*").Id(fieldTypeLower)
+			} else if child.RelationTypeID == 7 {
+				continue
+				// g.Id(fieldTypeLower).Id("*" + fieldTypeLower)
+
 			} else {
 				g.Id(fieldTypeLower).Id("*" + fieldTypeLower)
-
 			}
 		}
 
@@ -122,12 +124,12 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 	resolverFile.Empty()
 	resolverFile.Empty()
 
-	entitiesUpsertResolver(resolverFile,entityName, entity, db)
+	entitiesUpsertResolver(resolverFile, entityName, entity, db)
 
 	resolverFile.Empty()
 	resolverFile.Empty()
 
-	entitiesdeleteResolver(resolverFile,entityName,entity,entityRelationsForAllEndpoint,db)
+	entitiesdeleteResolver(resolverFile, entityName, entity, entityRelationsForAllEndpoint, db)
 
 	resolverFile.Comment("Fields resolvers")
 	//scalar types fields
@@ -153,13 +155,13 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		})
 	}
 
+	//Field resolvers
 
-
-	for _,value := range childOfEntity {
+	for _, value := range childOfEntity {
 		childNameLower := strings.ToLower(value.ChildEntity.DisplayName)
 		childNameCaps := snakeCaseToCamelCase(value.ChildEntity.DisplayName)
 
-		if value.RelationTypeID==1 || value.RelationTypeID == 4{
+		if value.RelationTypeID == 1 || value.RelationTypeID == 4 {
 			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(childNameCaps).Params().Id("*" + childNameLower + "Resolver").BlockFunc(func(g *Group) {
 				g.If(Id("r").Op(".").Id(entityNameLower).Op("!=").Nil()).BlockFunc(func(h *Group) {
 					h.Id(childNameLower).Op(":=").Qual(const_ModelsPath, "Get" + childNameCaps + "Of" + entityName).Call(
@@ -173,36 +175,56 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			})
 		}
 
-		if value.RelationTypeID==2 || value.RelationTypeID==3 || value.RelationTypeID == 5 || value.RelationTypeID == 6{
-			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(childNameCaps+"s").Params().Id("[]*" + childNameLower + "Resolver").BlockFunc(func(g *Group) {
-				g.Var().Id(childNameLower+"s").Id("[]*"+childNameLower+"Resolver")
+		if value.RelationTypeID == 2 || value.RelationTypeID == 3 || value.RelationTypeID == 5 || value.RelationTypeID == 6 {
+			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(childNameCaps + "s").Params().Id("[]*" + childNameLower + "Resolver").BlockFunc(func(g *Group) {
+				g.Var().Id(childNameLower + "s").Id("[]*" + childNameLower + "Resolver")
 				g.If(Id("r").Op(".").Id(entityNameLower).Op("!=").Nil()).BlockFunc(func(h *Group) {
 					h.Id(childNameLower).Op(":=").Qual(const_ModelsPath, "Get" + childNameCaps + "sOf" + entityName).Call(
 						Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("r").Op(".").Id(entityNameLower).Op(".").Id("id")),
 					)
-					h.For().Id("_").Op(",").Id("value").Op(":=").Range().Id(childNameLower).BlockFunc(func (j *Group) {
-						j.Id(childNameLower+"s").Op("=").Append(Id(childNameLower+"s"),Id("&"+childNameLower+"Resolver").Values(Qual("","Map"+childNameCaps).Call(Id("value"))))
+					h.For().Id("_").Op(",").Id("value").Op(":=").Range().Id(childNameLower).BlockFunc(func(j *Group) {
+						j.Id(childNameLower + "s").Op("=").Append(Id(childNameLower + "s"), Id("&" + childNameLower + "Resolver").Values(Qual("", "Map" + childNameCaps).Call(Id("value"))))
 					})
 					h.Return(Id(childNameLower + "s"))
 				})
-				g.For().Id("_").Op(",").Id("value").Op(":=").Range().Id("r").Op(".").Id(entityNameLower).Op(".").Id(childNameLower+"s").BlockFunc(func (h *Group){
-					h.Id(childNameLower+"s").Op("=").Append(Id(childNameLower+"s"),Id("&"+childNameLower+"Resolver").Values(Id("value")))
+				g.For().Id("_").Op(",").Id("value").Op(":=").Range().Id("r").Op(".").Id(entityNameLower).Op(".").Id(childNameLower + "s").BlockFunc(func(h *Group) {
+					h.Id(childNameLower + "s").Op("=").Append(Id(childNameLower + "s"), Id("&" + childNameLower + "Resolver").Values(Id("value")))
 				})
-				g.Return(Id(childNameLower+"s"))
+				g.Return(Id(childNameLower + "s"))
+			})
+
+		}
+
+		if value.RelationTypeID == 7 {
+			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(childNameCaps + "s").Params().Id("[]*" + childNameLower + "Resolver").BlockFunc(func(g *Group) {
+				g.Var().Id(childNameLower + "s").Id("[]*" + childNameLower + "Resolver")
+				g.If(Id("r").Op(".").Id(entityNameLower).Op("!=").Nil()).BlockFunc(func(h *Group) {
+					h.Id(childNameLower).Op(":=").Qual(const_ModelsPath, "Get" + childNameCaps + "sOf" + entityName).Call(
+						Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("r").Op(".").Id(entityNameLower).Op(".").Id("id")),
+					)
+					h.For().Id("_").Op(",").Id("value").Op(":=").Range().Id("*"+childNameLower).BlockFunc(func(j *Group) {
+						j.Id(childNameLower + "s").Op("=").Append(Id(childNameLower + "s"), Id("&" + childNameLower + "Resolver").Values(Qual("", "Map" + childNameCaps).Call(Id("value"))))
+					})
+					h.Return(Id(childNameLower + "s"))
+				})
+				g.For().Id("_").Op(",").Id("value").Op(":=").Range().Id("r").Op(".").Id(entityNameLower).Op(".").Id(childNameLower + "s").BlockFunc(func(h *Group) {
+					h.Id(childNameLower + "s").Op("=").Append(Id(childNameLower + "s"), Id("&" + childNameLower + "Resolver").Values(Id("value")))
+				})
+				g.Return(Id(childNameLower + "s"))
 			})
 
 		}
 	}
 
-	for _,value := range parOfEntity {
+	for _, value := range parOfEntity {
 		parentNameLower := strings.ToLower(value.ParentEntity.DisplayName)
 		parentNameCaps := snakeCaseToCamelCase(value.ParentEntity.DisplayName)
 
-		if value.RelationTypeID==1 || value.RelationTypeID==2 || value.RelationTypeID == 4 || value.RelationTypeID == 5{
+		if value.RelationTypeID == 1 || value.RelationTypeID == 2 || value.RelationTypeID == 4 || value.RelationTypeID == 5 {
 			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(parentNameCaps).Params().Id("*" + parentNameLower + "Resolver").BlockFunc(func(g *Group) {
 				g.If(Id("r").Op(".").Id(entityNameLower).Op("!=").Nil()).BlockFunc(func(h *Group) {
 					h.Id(parentNameLower).Op(":=").Qual(const_ModelsPath, "Get" + parentNameCaps + "Of" + entityName).Call(
-						Qual("","ReverseMap2"+entityName).Call(Id("r").Op(".").Id(entityNameLower)),
+						Qual("", "ReverseMap2" + entityName).Call(Id("r").Op(".").Id(entityNameLower)),
 					)
 					h.Return(Id("&" + parentNameLower + "Resolver").Values(
 						Qual("", "Map" + parentNameCaps).Call(Id(parentNameLower)),
@@ -212,28 +234,27 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 			})
 		}
 
-		if value.RelationTypeID==3 || value.RelationTypeID == 6{
-			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(parentNameCaps+"s").Params().Id("[]*" + parentNameLower + "Resolver").BlockFunc(func(g *Group) {
-				g.Var().Id(parentNameLower+"s").Id("[]*"+parentNameLower+"Resolver")
+		if value.RelationTypeID == 3 || value.RelationTypeID == 6 {
+			resolverFile.Func().Params(Id("r *" + entityNameLower + "Resolver")).Id(parentNameCaps + "s").Params().Id("[]*" + parentNameLower + "Resolver").BlockFunc(func(g *Group) {
+				g.Var().Id(parentNameLower + "s").Id("[]*" + parentNameLower + "Resolver")
 				g.If(Id("r").Op(".").Id(entityNameLower).Op("!=").Nil()).BlockFunc(func(h *Group) {
 					h.Id(parentNameLower).Op(":=").Qual(const_ModelsPath, "Get" + parentNameCaps + "sOf" + entityName).Call(
 						Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("r").Op(".").Id(entityNameLower).Op(".").Id("id")),
 					)
-					h.For().Id("_").Op(",").Id("value").Op(":=").Range().Id(parentNameLower).BlockFunc(func (j *Group) {
-						j.Id(parentNameLower+"s").Op("=").Append(Id(parentNameLower+"s"),Id("&"+parentNameLower+"Resolver").Values(Qual("","Map"+parentNameCaps).Call(Id("value"))))
+					h.For().Id("_").Op(",").Id("value").Op(":=").Range().Id(parentNameLower).BlockFunc(func(j *Group) {
+						j.Id(parentNameLower + "s").Op("=").Append(Id(parentNameLower + "s"), Id("&" + parentNameLower + "Resolver").Values(Qual("", "Map" + parentNameCaps).Call(Id("value"))))
 					})
 					h.Return(Id(parentNameLower + "s"))
 				})
-				g.For().Id("_").Op(",").Id("value").Op(":=").Range().Id("r").Op(".").Id(entityNameLower).Op(".").Id(parentNameLower+"s").BlockFunc(func (h *Group){
-					h.Id(parentNameLower+"s").Op("=").Append(Id(parentNameLower+"s"),Id("&"+parentNameLower+"Resolver").Values(Id("value")))
+				g.For().Id("_").Op(",").Id("value").Op(":=").Range().Id("r").Op(".").Id(entityNameLower).Op(".").Id(parentNameLower + "s").BlockFunc(func(h *Group) {
+					h.Id(parentNameLower + "s").Op("=").Append(Id(parentNameLower + "s"), Id("&" + parentNameLower + "Resolver").Values(Id("value")))
 				})
-				g.Return(Id(parentNameLower+"s"))
+				g.Return(Id(parentNameLower + "s"))
 			})
 
 		}
 
 	}
-
 
 	resolverFile.Empty()
 	resolverFile.Comment("Mapper methods")
@@ -284,14 +305,12 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 		g.Empty()
 		g.Comment("Create graphql " + entityNameLower + " from " + const_ModelsPath + " " + entityName)
 
-		g.Var().Id(entityNameLower+"Model").Id(const_ModelsPath).Dot(entityName)
+		g.Var().Id(entityNameLower + "Model").Id(const_ModelsPath).Dot(entityName)
 
 		g.If(Id("mygraphql" + entityName).Dot("Id").Op("==").Nil()).Block(
 
 
 			Id(entityNameLower + "Model").Op("=").Qual(const_ModelsPath, entityName).Values(DictFunc(func(d Dict) {
-
-
 
 				for _, column := range entity.Columns {
 
@@ -303,11 +322,11 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 						continue
 					}
 
-					if column.ColumnType.Type == "int" && strings.HasSuffix(column.Name,"_id"){
+					if column.ColumnType.Type == "int" && strings.HasSuffix(column.Name, "_id") {
 						//d[Id(fieldNameCaps)] = Qual(const_UtilsPath,const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
 						continue
 					}
-					if column.ColumnType.Type == "varchar" && strings.HasSuffix(column.Name,"_type"){
+					if column.ColumnType.Type == "varchar" && strings.HasSuffix(column.Name, "_type") {
 						//d[Id(fieldNameCaps)] = Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps)
 						continue
 					}
@@ -315,47 +334,46 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 				}
 			}))).Else().Block(
-				Id(entityNameLower + "Model").Op("=").Qual(const_ModelsPath, entityName).Values(DictFunc(func(d Dict) {
-			for _, column := range entity.Columns {
+			Id(entityNameLower + "Model").Op("=").Qual(const_ModelsPath, entityName).Values(DictFunc(func(d Dict) {
+				for _, column := range entity.Columns {
 
-				fieldNameCaps := snakeCaseToCamelCase(column.Name)
+					fieldNameCaps := snakeCaseToCamelCase(column.Name)
 
-				if column.Name == "id" {
-					//graphql.ID(strconv.Itoa(modelUser.Id)),
-					d[Id(fieldNameCaps)] = Qual("utils", "ConvertId").Params(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
-					continue
+					if column.Name == "id" {
+						//graphql.ID(strconv.Itoa(modelUser.Id)),
+						d[Id(fieldNameCaps)] = Qual("utils", "ConvertId").Params(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+						continue
+					}
+
+					if column.ColumnType.Type == "int" {
+						d[Id(fieldNameCaps)] = Qual(const_UtilsPath, const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+						continue
+					}
+					if column.ColumnType.Type == "varchar" && strings.HasSuffix(column.Name, "_type") {
+						d[Id(fieldNameCaps)] = Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+						continue
+					}
+					d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+
 				}
-
-				if column.ColumnType.Type == "int" {
-					d[Id(fieldNameCaps)] = Qual(const_UtilsPath,const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
-					continue
-				}
-				if column.ColumnType.Type == "varchar" && strings.HasSuffix(column.Name,"_type"){
-					d[Id(fieldNameCaps)] = Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps)
-					continue
-				}
-				d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
-
-			}
-		})))
-
+			})))
 
 		g.Return(Id(entityNameLower + "Model"))
 	})
 
 	//reverse mapper method used in field resolvers
 
-	resolverFile.Func().Id("ReverseMap2" + entityName).Params(Id("struct" + entityName).Id("*"+entityNameLower)).Params(Qual(const_ModelsPath,entityName)).BlockFunc(func(g *Group) {
+	resolverFile.Func().Id("ReverseMap2" + entityName).Params(Id("struct" + entityName).Id("*" + entityNameLower)).Params(Qual(const_ModelsPath, entityName)).BlockFunc(func(g *Group) {
 		g.Empty()
 
 		//g.If(Id("model" + entityName).Op("== (").Qual(const_ModelsPath, entityName).Op("{})")).BlockFunc(func(h *Group) {
 		g.If(Qual("reflect", "DeepEqual").Call(Id("struct" + entityName), Id(entityNameLower).Op("{}"))).BlockFunc(func(h *Group) {
-			h.Return(Qual(const_ModelsPath,entityName).Values())
+			h.Return(Qual(const_ModelsPath, entityName).Values())
 		})
 
 		g.Empty()
 		g.Comment("Create graphql " + entityNameLower + " from " + const_ModelsPath + " " + entityName)
-		g.Id("model"+entityName).Op(":=").Qual(const_ModelsPath,entityName).Values(DictFunc(func(d Dict) {
+		g.Id("model" + entityName).Op(":=").Qual(const_ModelsPath, entityName).Values(DictFunc(func(d Dict) {
 			for _, column := range entity.Columns {
 
 				fieldNameCaps := snakeCaseToCamelCase(column.Name)
@@ -380,7 +398,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 
 }
 
-func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity, db *gorm.DB){
+func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity, db *gorm.DB) {
 
 	var childOfEntity = []Relation{}
 	db.Preload("InterEntity").
@@ -391,8 +409,6 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 		Find(&childOfEntity)
 
 	entityNameLower := strings.ToLower(entityName)
-
-
 
 	resolverFile.Func().Id("ResolveCreate" + entityName).Params(Id("args").Id("*").StructFunc(func(g *Group) {
 
@@ -414,13 +430,13 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 		)
 
-
 		for _, val := range childOfEntity {
 
 			var childName = val.ChildEntity.DisplayName
 			var childNameLower = strings.ToLower(val.ChildEntity.DisplayName)
 
-			if val.RelationTypeID == 1 {		// One to One
+			if val.RelationTypeID == 1 {
+				// One to One
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName).Op("!=").Nil()).Block(
@@ -430,12 +446,12 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Dot(entityName).Dot(childName)),
 
 						If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
-							Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
+							Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
 							Comment("todo throw error"),
-							Return(Id("&"+entityNameLower+"Resolver{}")),
+							Return(Id("&" + entityNameLower + "Resolver{}")),
 						),
 
-						Id(childNameLower).Dot(entityName + "Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+						Id(childNameLower).Dot(entityName + "Id").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
 						Id(entityNameLower).Dot(childNameLower).Op("=").
 							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
 							Params(Id(childNameLower))),
@@ -448,11 +464,11 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Dot(entityName).Dot(childName)),
 
 						If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
-							Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
+							Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
 							Comment("todo throw error"),
-							Return(Id("&"+entityNameLower+"Resolver{}")),						),
+							Return(Id("&" + entityNameLower + "Resolver{}")), ),
 
-						Id(childNameLower).Dot(entityName + "Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+						Id(childNameLower).Dot(entityName + "Id").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
 						Id(entityNameLower).Dot(childNameLower).Op("=").
 							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 							Params(Id(childNameLower))),
@@ -462,7 +478,8 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 				)
 
-			} else if val.RelationTypeID == 4 {	//Poly One to One
+			} else if val.RelationTypeID == 4 {
+				//Poly One to One
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName).Op("!=").Nil()).Block(
@@ -472,12 +489,12 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Dot(entityName).Dot(childName)),
 
 						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-							Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
 							Comment("todo throw error"),
-							Return(Id("&"+entityNameLower+"Resolver{}")),						),
+							Return(Id("&" + entityNameLower + "Resolver{}")), ),
 
-						Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
-						Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
+						Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+						Id(childNameLower).Dot(childName + "Type").Op("=").Lit(entityNameLower),
 						Id(entityNameLower).Dot(childNameLower).Op("=").
 							Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
 							Params(Id(childNameLower))),
@@ -490,12 +507,12 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Dot(entityName).Dot(childName)),
 
 						If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-							Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+							Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
 							Comment("todo throw error"),
-							Return(Id("&"+entityNameLower+"Resolver{}")),						),
+							Return(Id("&" + entityNameLower + "Resolver{}")), ),
 
-						Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
-						Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
+						Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+						Id(childNameLower).Dot(childName + "Type").Op("=").Lit(entityNameLower),
 						Id(entityNameLower).Dot(childNameLower).Op("=").
 							Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 							Params(Id(childNameLower))),
@@ -505,7 +522,8 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 				)
 
-			} else if val.RelationTypeID == 2 {	//One to Many
+			} else if val.RelationTypeID == 2 {
+				//One to Many
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName + "s").Op("!=").Nil()).Block(
@@ -517,15 +535,15 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
 
 							If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
-								Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).
+								Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).
 								Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
 								Comment("todo throw error"),
-								Return(Id("&"+entityNameLower+"Resolver{}")),							),
+								Return(Id("&" + entityNameLower + "Resolver{}")), ),
 
-							Id(childNameLower).Dot(entityName + "Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
+							Id(childNameLower).Dot(entityName + "Id").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
-								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
 								Params(Id(childNameLower)))),
 
 
@@ -534,32 +552,81 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
 
 							If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
-								Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
+								Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
 								Comment("todo throw error"),
-								Return(Id("&"+entityNameLower+"Resolver{}")),							),
+								Return(Id("&" + entityNameLower + "Resolver{}")), ),
 
-							Id(childNameLower).Dot(entityName + "Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
+							Id(childNameLower).Dot(entityName + "Id").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
-								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 								Params(Id(childNameLower)))),
 						),
 
 					),
 				)
-			} else if val.RelationTypeID == 3 {	//Many to Many
+			} else if val.RelationTypeID == 7 {
+				//One to Many
 
-				interEntity:=val.InterEntity.DisplayName
-				interEntityLower:=strings.ToLower(val.InterEntity.DisplayName)
+				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
+					Dot(childName + "s").Op("!=").Nil()).Block(
+
+					For(Id("_ ,").Id("dev").Op(":=").Range().Id("*args").Dot(entityName).Dot(childName + "s")).Block(
+
+
+						If(Id("dev").Dot("Id").Op("==").Nil()).Block(
+							Id("child" + childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+							/*
+
+							If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
+								Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).
+								Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
+								Comment("todo throw error"),
+								Return(Id("&" + entityNameLower + "Resolver{}")), ),
+							*/
+
+							Id("child" + childNameLower).Dot("ParId").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).
+								Call(Id(entityNameLower).Dot("id")),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+								Params(Id("child" + childNameLower)))),
+
+
+						).Else().Block(
+
+							Id("child" + childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
+							/*
+
+							If(Id(childNameLower).Dot(entityName + "Id").Op("!=0 && ").
+								Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot(entityName + "Id")).Block(
+								Comment("todo throw error"),
+								Return(Id("&" + entityNameLower + "Resolver{}")), ),
+							*/
+
+
+							Id("child" + childNameLower).Dot("ParId").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).
+								Call(Id(entityNameLower).Dot("id")),
+							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+								Params(Id("child" + childNameLower)))),
+
+						),
+
+					),
+				)
+			} else if val.RelationTypeID == 3 {
+				//Many to Many
+
+				interEntity := val.InterEntity.DisplayName
+				interEntityLower := strings.ToLower(val.InterEntity.DisplayName)
 
 				var col []Column
 				var colName []string
-				database.SQL.Where("entity_id=?",val.InterEntity.ID).Find(&col)
+				database.SQL.Where("entity_id=?", val.InterEntity.ID).Find(&col)
 
-				for _,v:=range col{
-					colName = append(colName,v.DisplayName)
+				for _, v := range col {
+					colName = append(colName, v.DisplayName)
 				}
-
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName + "s").Op("!=").Nil()).Block(
@@ -570,26 +637,26 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 						If(Id("dev").Dot("Id").Op("==").Nil()).Block(
 							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Op("&").Id("dev")),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
-								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
 								Params(Id(childNameLower)))),
 							Empty(),
 							Empty(),
-							Var().Id("data").Op("=").Id(interEntityLower+"Input{}"),
-							Id(interEntityLower).Op(":=").Id("ReverseMap"+interEntity).Call(Id("&data")),
-							Id(entityNameLower+"Id").Op(":=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+							Var().Id("data").Op("=").Id(interEntityLower + "Input{}"),
+							Id(interEntityLower).Op(":=").Id("ReverseMap" + interEntity).Call(Id("&data")),
+							Id(entityNameLower + "Id").Op(":=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
 
-							Var().Id(childNameLower+"Id").Uint(),
+							Var().Id(childNameLower + "Id").Uint(),
 
-							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower+"s")).Block(
+							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower + "s")).Block(
 
-								Id(childNameLower+"Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("val").Dot("id")),
+								Id(childNameLower + "Id").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("val").Dot("id")),
 							),
 
-							Id(interEntityLower).Dot(colName[1]).Op("=").Id(entityNameLower+"Id"),
-							Id(interEntityLower).Dot(colName[2]).Op("=").Id(childNameLower+"Id"),
+							Id(interEntityLower).Dot(colName[1]).Op("=").Id(entityNameLower + "Id"),
+							Id(interEntityLower).Dot(colName[2]).Op("=").Id(childNameLower + "Id"),
 
 
-							Id("models").Dot("Post"+interEntity).Call(Id(interEntityLower)),
+							Id("models").Dot("Post" + interEntity).Call(Id(interEntityLower)),
 							Empty(),
 							Empty(),
 
@@ -597,26 +664,26 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
-								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 								Params(Id(childNameLower)))),
 							Empty(),
 							Empty(),
-							Var().Id("data").Op("=").Id(interEntityLower+"Input{}"),
-							Id(interEntityLower).Op(":=").Id("ReverseMap"+interEntity).Call(Id("&data")),
-							Id(entityNameLower+"Id").Op(":=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+							Var().Id("data").Op("=").Id(interEntityLower + "Input{}"),
+							Id(interEntityLower).Op(":=").Id("ReverseMap" + interEntity).Call(Id("&data")),
+							Id(entityNameLower + "Id").Op(":=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
 
-							Var().Id(childNameLower+"Id").Uint(),
+							Var().Id(childNameLower + "Id").Uint(),
 
-							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower+"s")).Block(
+							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower + "s")).Block(
 
-								Id(childNameLower+"Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("val").Dot("id")),
+								Id(childNameLower + "Id").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("val").Dot("id")),
 							),
 
-							Id(interEntityLower).Dot(colName[1]).Op("=").Id(entityNameLower+"Id"),
-							Id(interEntityLower).Dot(colName[2]).Op("=").Id(childNameLower+"Id"),
+							Id(interEntityLower).Dot(colName[1]).Op("=").Id(entityNameLower + "Id"),
+							Id(interEntityLower).Dot(colName[2]).Op("=").Id(childNameLower + "Id"),
 
 
-							Id("models").Dot("Post"+interEntity).Call(Id(interEntityLower)),
+							Id("models").Dot("Post" + interEntity).Call(Id(interEntityLower)),
 							Empty(),
 							Empty(),
 
@@ -625,7 +692,8 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 
 					),
 				)
-			} else if val.RelationTypeID == 5{	//Poly One to Many
+			} else if val.RelationTypeID == 5 {
+				//Poly One to Many
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
 					Dot(childName + "s").Op("!=").Nil()).Block(
@@ -637,16 +705,16 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
 
 							If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-								Qual(const_UtilsPath,const_UtilsConvertId).
+								Qual(const_UtilsPath, const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
 								Comment("todo throw error"),
-								Return(Id("&"+entityNameLower+"Resolver{}")),							),
+								Return(Id("&" + entityNameLower + "Resolver{}")), ),
 
-							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
+							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")),
-							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
+							Id(childNameLower).Dot(childName + "Type").Op("=").Lit(entityNameLower),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
-								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
 								Params(Id(childNameLower)))),
 
 
@@ -655,32 +723,33 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
 
 							If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-								Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+								Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
 								Comment("todo throw error"),
-								Return(Id("&"+entityNameLower+"Resolver{}")),							),
+								Return(Id("&" + entityNameLower + "Resolver{}")), ),
 
-							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
+							Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")),
-							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
+							Id(childNameLower).Dot(childName + "Type").Op("=").Lit(entityNameLower),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
-								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 								Params(Id(childNameLower)))),
 
 						),
 
 					),
 				)
-			}else if val.RelationTypeID == 6 {		//Poly Many to Many
+			} else if val.RelationTypeID == 6 {
+				//Poly Many to Many
 
-				interEntity:=val.InterEntity.DisplayName
-				interEntityLower:=strings.ToLower(val.InterEntity.DisplayName)
+				interEntity := val.InterEntity.DisplayName
+				interEntityLower := strings.ToLower(val.InterEntity.DisplayName)
 
 				var col []Column
 				var colName []string
-				database.SQL.Where("entity_id=?",val.InterEntity.ID).Find(&col)
+				database.SQL.Where("entity_id=?", val.InterEntity.ID).Find(&col)
 
-				for _,v:=range col{
-					colName = append(colName,v.DisplayName)
+				for _, v := range col {
+					colName = append(colName, v.DisplayName)
 				}
 
 				h.If(Id(entityNameLower).Op("!=").Nil().Id("&&").Id("args").Dot(entityName).
@@ -693,36 +762,36 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
 
 							If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-								Qual(const_UtilsPath,const_UtilsConvertId).
+								Qual(const_UtilsPath, const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
 								Comment("todo throw error"),
-								Return(Id("&"+entityNameLower+"Resolver{}")),							),
+								Return(Id("&" + entityNameLower + "Resolver{}")), ),
 
 							/*Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
 								Call(Id(entityNameLower).Dot("id")),
 							Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),*/
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
-								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Post" + childName).
 								Params(Id(childNameLower)))),
 							Empty(),
 							Empty(),
-							Var().Id("data").Op("=").Id(interEntityLower+"Input{}"),
-							Id(interEntityLower).Op(":=").Id("ReverseMap"+interEntity).Call(Id("&data")),
-							Id(entityNameLower+"Id").Op(":=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+							Var().Id("data").Op("=").Id(interEntityLower + "Input{}"),
+							Id(interEntityLower).Op(":=").Id("ReverseMap" + interEntity).Call(Id("&data")),
+							Id(entityNameLower + "Id").Op(":=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
 
-							Var().Id(childNameLower+"Id").Uint(),
+							Var().Id(childNameLower + "Id").Uint(),
 
-							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower+"s")).Block(
+							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower + "s")).Block(
 
-								Id(childNameLower+"Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("val").Dot("id")),
+								Id(childNameLower + "Id").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("val").Dot("id")),
 							),
 
-							Id(interEntityLower).Dot(colName[1]).Op("=").Id(childNameLower+"Id"),
-							Id(interEntityLower).Dot(colName[2]).Op("=").Id(entityNameLower+"Id"),
+							Id(interEntityLower).Dot(colName[1]).Op("=").Id(childNameLower + "Id"),
+							Id(interEntityLower).Dot(colName[2]).Op("=").Id(entityNameLower + "Id"),
 							Id(interEntityLower).Dot(colName[3]).Op("=").Lit(entityNameLower),
 
 
-							Id("models").Dot("Post"+interEntity).Call(Id(interEntityLower)),
+							Id("models").Dot("Post" + interEntity).Call(Id(interEntityLower)),
 							Empty(),
 							Empty(),
 
@@ -732,35 +801,35 @@ func entitiesUpsertResolver(resolverFile *File, entityName string, entity Entity
 							Id(childNameLower).Op(":=").Id("ReverseMap" + childName).Params(Id("&dev")),
 
 							If(Id(childNameLower).Dot("TypeId").Op("!=0 && ").
-								Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
+								Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")).Op("!=").Id(childNameLower).Dot("TypeId")).Block(
 								Comment("todo throw error"),
-								Return(Id("&"+entityNameLower+"Resolver{}")),							),
+								Return(Id("&" + entityNameLower + "Resolver{}")), ),
 
 							//Id(childNameLower).Dot("TypeId").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).
 							//	Call(Id(entityNameLower).Dot("id")),
 							//Id(childNameLower).Dot(childName+"Type").Op("=").Lit(entityNameLower),
 							Id(entityNameLower).Dot(childNameLower + "s").Op("=").
-								Append(Id(entityNameLower).Dot(childNameLower+"s"),Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
+								Append(Id(entityNameLower).Dot(childNameLower + "s"), Id("Map" + childName).Call(Id("models").Dot("Put" + childName).
 								Params(Id(childNameLower)))),
 							Empty(),
 							Empty(),
-							Var().Id("data").Op("=").Id(interEntityLower+"Input{}"),
-							Id(interEntityLower).Op(":=").Id("ReverseMap"+interEntity).Call(Id("&data")),
-							Id(entityNameLower+"Id").Op(":=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
+							Var().Id("data").Op("=").Id(interEntityLower + "Input{}"),
+							Id(interEntityLower).Op(":=").Id("ReverseMap" + interEntity).Call(Id("&data")),
+							Id(entityNameLower + "Id").Op(":=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id(entityNameLower).Dot("id")),
 
-							Var().Id(childNameLower+"Id").Uint(),
+							Var().Id(childNameLower + "Id").Uint(),
 
-							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower+"s")).Block(
+							For(Id("_ ,").Id("val").Op(":=").Range().Id(entityNameLower).Dot(childNameLower + "s")).Block(
 
-								Id(childNameLower+"Id").Op("=").Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("val").Dot("id")),
+								Id(childNameLower + "Id").Op("=").Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("val").Dot("id")),
 							),
 
-							Id(interEntityLower).Dot(colName[1]).Op("=").Id(childNameLower+"Id"),
-							Id(interEntityLower).Dot(colName[2]).Op("=").Id(entityNameLower+"Id"),
+							Id(interEntityLower).Dot(colName[1]).Op("=").Id(childNameLower + "Id"),
+							Id(interEntityLower).Dot(colName[2]).Op("=").Id(entityNameLower + "Id"),
 							Id(interEntityLower).Dot(colName[3]).Op("=").Lit(entityNameLower),
 
 
-							Id("models").Dot("Post"+interEntity).Call(Id(interEntityLower)),
+							Id("models").Dot("Post" + interEntity).Call(Id(interEntityLower)),
 							Empty(),
 							Empty(),
 
@@ -826,13 +895,13 @@ func createResolver(resolverFile *File, allModels []string) {
 			//})).Params(Id("*" + strings.ToLower(val) + "Resolver")).
 		})).Params(Id("*int32")).
 			BlockFunc(func(g *Group) {
-			g.Return(Qual("", "ResolveDelete" + val)).Call(Id("args"),Lit(""))
+			g.Return(Qual("", "ResolveDelete" + val)).Call(Id("args"), Lit(""))
 		})
 
 	}
 }
 
-func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity, entityRelationsForAllEndpoint []EntityRelation,db *gorm.DB){
+func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity, entityRelationsForAllEndpoint []EntityRelation, db *gorm.DB) {
 	var allInterRelation []string
 	//fmt.Println("test",len(allInterRelation))
 	var flag int
@@ -850,10 +919,9 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 	}
 
-
 	fmt.Println("dsfsd :", allInterRelation)
 
-	entityNameLower:=strings.ToLower(entityName)
+	entityNameLower := strings.ToLower(entityName)
 
 	relationsParent := []Relation{}
 	db.Preload("InterEntity").
@@ -872,7 +940,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 		Where("child_entity_id=?", entity.ID).
 		Find(&relationsChild)
 
-       // fmt.Println("child : ",relationsChild)
+	// fmt.Println("child : ",relationsChild)
 
 	/*var args = ""
 	for _,val:= range relationsChild{
@@ -888,15 +956,13 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 		g.Id("ID").Qual(const_GraphQlPath, "ID")
 		g.Id("CascadeDelete").Bool()
-	}),Id("name string")).Params(Id("response *").Int32()).BlockFunc(func(g *Group) {
-
+	}), Id("name string")).Params(Id("response *").Int32()).BlockFunc(func(g *Group) {
 
 		resolverFile.Empty()
 		resolverFile.Empty()
 
 		g.Var().Id("del").Bool()
 		g.Var().Id("count").Int32()
-
 
 		g.If(Id("len").Call(Id("models." + entityName + "Children")).Op("==").Lit(0).Op("&&").Id("len").Call(Id("models." + entityName + "InterRelation")).Op("==").Lit(0)).Block(
 			Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
@@ -914,49 +980,56 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 			Return(Id("response")),
 		)
 
-		for _,v := range relationsParent {
+		for _, v := range relationsParent {
 			fmt.Println(v)
 
 			g.Id("tempID").Op(":=").Id("args").Op(".").Id("ID")
 
-
 			var sliceForPreload[]string
 
-			for _ , val :=  range relationsParent{
+			for _, val := range relationsParent {
 
 				var childnameCaps string
- // val.RelationTypeID == 4
+				// val.RelationTypeID == 4
 				if val.RelationTypeID == 1 {
 					childnameCaps = snakeCaseToCamelCase(val.ChildEntity.DisplayName)
 				}
-				if val.RelationTypeID == 2 ||  val.RelationTypeID == 5 {
+				if val.RelationTypeID == 2 || val.RelationTypeID == 5 {
 					childnameCaps = snakeCaseToCamelCase(val.ChildEntity.DisplayName)
-					childnameCaps = childnameCaps+"s"
+					childnameCaps = childnameCaps + "s"
 				}
 
 				if val.RelationTypeID == 3 || val.RelationTypeID == 6 {
 					childnameCaps = snakeCaseToCamelCase(val.InterEntity.DisplayName)
 					childnameCaps = childnameCaps + "s"
 				}
-				sliceForPreload = append(sliceForPreload,childnameCaps)
+
+				sliceForPreload = append(sliceForPreload, childnameCaps)
 			}
 
 			var finalId string
 
-			for _,childName := range sliceForPreload {
-				if childName!=""{
-					finalId = finalId + `Preload("`+childName+`").`
+			for _, childName := range sliceForPreload {
+				if childName != "" {
+					finalId = finalId + `Preload("` + childName + `").`
 				}
 				//finalId = finalId + tempId
 			}
 
 			g.If(Id("args.CascadeDelete").Op("==").True()).BlockFunc(func(h *Group) {
 
-				h.Var().Id("data models." + entityName)
 
+				if v.RelationTypeID==7{
+					h.Var().Id("data []models." + entityName)
+					h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Op(".").
+						Id("Where").Call(Lit("par_id=?"), Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 
-				h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Op(".").
-					Id(finalId).Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+				} else {
+					h.Var().Id("data models." + entityName)
+					h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Op(".").
+						Id(finalId).Id("Where").Call(Lit("id=?"), Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+
+				}
 
 				for _, val := range relationsParent {
 					//childNameLower := strings.ToLower(val.ChildEntity.DisplayName)
@@ -968,21 +1041,20 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps)).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 						h.If(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id").Op("!=").Lit(0)).Block(
 							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("data").Op(".").Id(childNameCaps).Op(".").Id("Id")),
-							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"),Lit("")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"), Lit("")),
 							Id("count++"),
 						)
-
 
 						h.Empty()
 						h.Empty()
 
 					}
 
-					if val.RelationTypeID == 2  {
+					if val.RelationTypeID == 2 {
 						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(childNameCaps + "s")).Block(
 							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
-							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"),Lit("")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"), Lit("")),
 							Id("count++"),
 
 						)
@@ -990,12 +1062,24 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 						h.Empty()
 					}
 
-					if val.RelationTypeID == 3  {
+					if val.RelationTypeID == 7 {
+						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+						h.For(Id("_,v").Op(":=").Range().Id("data")).Block(
+							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"), Lit("")),
+							Id("count++"),
+
+						)
+						h.Empty()
+						h.Empty()
+					}
+
+					if val.RelationTypeID == 3 {
 						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(interNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 
 						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(interNameCaps + "s")).Block(
 							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
-							Qual("", "ResolveDelete" + interNameCaps).Call(Id("args"),Lit("")),
+							Qual("", "ResolveDelete" + interNameCaps).Call(Id("args"), Lit("")),
 							Id("count++"),
 
 						)
@@ -1009,17 +1093,16 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 						//var dataPhone models.Phone
 						//database.SQL.Model(models.Phone{}).Where("type_id=(?) AND phone_type=(?)",utils.ConvertId(tempID),"user").Find(&dataPhone)
 
-                                                h.Var().Id("data"+childNameCaps).Id("models."+childNameCaps)
+						h.Var().Id("data" + childNameCaps).Id("models." + childNameCaps)
 						h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + childNameCaps).Values()).Op(".").
-							Id("Where").Call(Lit("type_id=? AND "+childNameLower+"_type=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("tempID")).Op(",").Lit(entityNameLower)).
-							Dot("Find").Call(Id("&data"+childNameCaps))
-                                                h.Empty()
-						h.If(Id("data"+childNameCaps).Op(".").Id("Id").Op("!=").Lit(0)).Block(
-							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("data"+childNameCaps).Op(".").Id("Id")),
-							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"),Lit(entityNameLower)),
+							Id("Where").Call(Lit("type_id=? AND " + childNameLower + "_type=?"), Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("tempID")).Op(",").Lit(entityNameLower)).
+							Dot("Find").Call(Id("&data" + childNameCaps))
+						h.Empty()
+						h.If(Id("data" + childNameCaps).Op(".").Id("Id").Op("!=").Lit(0)).Block(
+							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("data" + childNameCaps).Op(".").Id("Id")),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"), Lit(entityNameLower)),
 							Id("count++"),
 						)
-
 
 						h.Empty()
 						h.Empty()
@@ -1030,7 +1113,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 						//h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps+"s")).Op(".").Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(childNameCaps + "s")).Block(
 							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
-							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"),Lit(entityNameLower)),
+							Qual("", "ResolveDelete" + childNameCaps).Call(Id("args"), Lit(entityNameLower)),
 							Id("count++"),
 
 						)
@@ -1043,7 +1126,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 						h.For(Id("_,v").Op(":=").Range().Id("data").Op(".").Id(interNameCaps + "s")).Block(
 							Id("args").Op(".").Id("ID").Op("=").Qual(const_UtilsPath, const_UtilsUintToGraphId).Call(Id("v").Op(".").Id("Id")),
-							Qual("", "ResolveDelete" + interNameCaps).Call(Id("args"),Lit(entityNameLower)),
+							Qual("", "ResolveDelete" + interNameCaps).Call(Id("args"), Lit(entityNameLower)),
 							Id("count++"),
 
 						)
@@ -1051,12 +1134,9 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 						h.Empty()
 					}
 
-
-
 				}
 
 				fmt.Println("len :", entityName, len(allInterRelation), "inter :", allInterRelation)
-
 
 				h.Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 					Qual(const_UtilsPath, const_UtilsConvertId).Call(
@@ -1075,13 +1155,18 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 			g.Empty()
 
 			g.Var().Id("flag").Int()
-			g.Var().Id("data").Id("models." + entityName)
+			if v.RelationTypeID==7{
+				g.Var().Id("data").Id("[]models." + entityName)
 
+			}else {
+				g.Var().Id("data").Id("models." + entityName)
+
+			}
 
 			g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Op(".").
-				Id(finalId).Id("Where").Call(Lit("id=?"),Qual(const_UtilsPath,const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
+				Id(finalId).Id("Where").Call(Lit("id=?"), Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
 
-/////////////////////////////////////
+			/////////////////////////////////////
 			for _, val := range relationsParent {
 				//childNameLower := strings.ToLower(val.ChildEntity.DisplayName)
 				childNameCaps := snakeCaseToCamelCase(val.ChildEntity.DisplayName)
@@ -1109,6 +1194,16 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 					g.Empty()
 				}
 
+				if val.RelationTypeID == 7 {
+					//g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(childNameCaps+"s")).Dot("Find").Call(Id("&data"))
+					g.For(Id("_,v").Op(":=").Range().Id("data")).Block(
+						If(Id("v").Op(".").Id("Id").Op("!=").Lit(0)).Block(
+							Id("flag++"),
+						),
+					)
+					g.Empty()
+					g.Empty()
+				}
 
 				if val.RelationTypeID == 3 || val.RelationTypeID == 6 {
 					//g.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Dot("Preload").Call(Lit(interNameCaps+"s")).Dot("Find").Call(Id("&data"))
@@ -1124,7 +1219,6 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 			}
 
-
 			g.If(Id("flag").Op("==").Lit(0)).Block(
 				Id("del").Op("=").Qual(const_ModelsPath, "Delete" + entityName).Call(
 					Qual(const_UtilsPath, const_UtilsConvertId).Call(
@@ -1138,7 +1232,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 			).Else().Block(
 				Comment("show error"),
-				Qual("fmt","Println").Call(Lit("Cannot Delete :"),Id("tempID")),
+				Qual("fmt", "Println").Call(Lit("Cannot Delete :"), Id("tempID")),
 				Id("del").Op("=").False(),
 				Id("response").Op("=").Id("&count"),
 			)

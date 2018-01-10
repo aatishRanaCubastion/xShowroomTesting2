@@ -58,6 +58,33 @@
         ]
       },
       {
+        "Name": "x_position",
+        "DisplayName": "Position",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull":0
+          },
+          {
+            "Name": "par_id",
+            "DisplayName": "ParId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull":1
+          }
+        ]
+      },
+      {
         "Name": "x_device",
         "DisplayName": "Device",
         "Fields": [
@@ -400,6 +427,14 @@
         "ChildEntityField": "id",
         "Pivot": "x_product_sale_phone",
         "Type": 6
+      },
+      {
+        "ParentEntity": "x_position",
+        "ParentEntityField": "id",
+        "ChildEntity": "x_position",
+        "ChildEntityField": "par_id",
+        "Pivot": "",
+        "Type": 7
       }
     ],
     "FieldTypes": [
@@ -436,6 +471,11 @@
       {
         "Id": 6,
         "Name": "PolyManyToMany"
+      },
+
+      {
+        "Id": 7,
+        "Name": "Self"
       }
     ]
   }

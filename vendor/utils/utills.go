@@ -33,9 +33,15 @@ func RuneToGraphId(ID rune) graphql.ID {
 }
 
 func Int32ToUint(ID int32) uint {
-	str := fmt.Sprint(ID)
-	str2 := StringToUInt(str)
-	return str2
+
+	if ID == 0{
+		return 0
+	}else{
+
+		str := fmt.Sprint(ID)
+		str2 := StringToUInt(str)
+		return str2
+	}
 }
 
 func SAppend(old *string, new string) {

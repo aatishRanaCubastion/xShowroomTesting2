@@ -132,6 +132,7 @@ func upsertRelationTypes() {
 	polyOneToOne := generator.RelationType{ID: 4, Name: "PolyOneToOne"}
 	polyOneToMany := generator.RelationType{ID: 5, Name: "PolyOneToMany"}
 	polyManyToMany := generator.RelationType{ID: 6, Name: "PolyManyToMany"}
+	self := generator.RelationType{ID: 7, Name: "Self"}
 
 	database.SQL.FirstOrCreate(&oneToOne)
 	database.SQL.FirstOrCreate(&oneToMany)
@@ -139,4 +140,5 @@ func upsertRelationTypes() {
 	database.SQL.FirstOrCreate(&polyOneToOne)
 	database.SQL.FirstOrCreate(&polyOneToMany)
 	database.SQL.FirstOrCreate(&polyManyToMany)
+	database.SQL.FirstOrCreate(&self)
 }

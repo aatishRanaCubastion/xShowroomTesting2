@@ -96,9 +96,11 @@ func createSchema(schemaFile *File, allEntities []Entity, db *gorm.DB) {
 
 			if child.RelationTypeID == 3 || child.RelationTypeID == 6 {
 				u.SAppend(&sS, "\t" + fieldTypeLower + "s" + ": " + "[" + fieldType + "!]" + "!\n")
-			} else {
-
+			} else if child.RelationTypeID == 7 {
+				continue
+			}else{
 				u.SAppend(&sS, "\t" + fieldTypeLower + ": " + fieldType + "!\n")
+
 			}
 		}
 
