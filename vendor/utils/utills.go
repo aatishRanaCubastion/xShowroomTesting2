@@ -9,23 +9,44 @@ import (
 )
 
 func StringToUInt(ID string) uint {
-	u64, err := strconv.ParseUint(ID, 10, 32)
-	if err != nil {
-		log.Println(err)
+
+	if ID == ""{
 		return 0
+	}else{
+
+		u64, err := strconv.ParseUint(ID, 10, 32)
+		if err != nil {
+			log.Println(err)
+			return 0
+		}
+		wd := uint(u64)
+		return wd
 	}
-	wd := uint(u64)
-	return wd
+
 }
 
 func ConvertId(id graphql.ID) uint {
-	val := StringToUInt(string(id))
-	return val
+
+	if id == ""{
+		return 0
+	}else{
+
+		val := StringToUInt(string(id))
+		return val
+	}
+
 }
 
 func UintToGraphId(ID uint) graphql.ID {
-	str := fmt.Sprint(ID)
-	return graphql.ID(str)
+
+	if ID == 0{
+		return ""
+	}else{
+		str := fmt.Sprint(ID)
+		return graphql.ID(str)
+
+	}
+
 }
 func RuneToGraphId(ID rune) graphql.ID {
 	str := fmt.Sprint(ID)

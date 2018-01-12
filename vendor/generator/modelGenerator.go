@@ -597,7 +597,7 @@ func createEntitiesPutMethod(modelFile *File, entityName string, methodName stri
 	modelFile.Func().Id(methodName).Params(Id("newData").Id(entityName)).Id(entityName).Block(
 		Id("oldData").Op(":=").Id(entityName).Id("{").Id("Id").Op(":").Id("newData").Op(".").Id("Id").Id("}"),
 		Qual(const_DatabasePath, "SQL.Model").Call(Id("&oldData")).Op(".").Id("Updates").Call(Id("newData")),
-		Return(Id("newData")),
+		Return(Id("Get"+entityName).Call(Id("newData").Dot("Id"))),
 	)
 
 	//controller method
