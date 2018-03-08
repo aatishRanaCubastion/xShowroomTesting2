@@ -202,7 +202,7 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 					h.Id(childNameLower).Op(":=").Qual(const_ModelsPath, "Get" + childNameCaps + "sOf" + entityName).Call(
 						Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("r").Op(".").Id(entityNameLower).Op(".").Id("id")),
 					)
-					h.For().Id("_").Op(",").Id("value").Op(":=").Range().Id("*"+childNameLower).BlockFunc(func(j *Group) {
+					h.For().Id("_").Op(",").Id("value").Op(":=").Range().Id("*" + childNameLower).BlockFunc(func(j *Group) {
 						j.Id(childNameLower + "s").Op("=").Append(Id(childNameLower + "s"), Id("&" + childNameLower + "Resolver").Values(Qual("", "Map" + childNameCaps).Call(Id("value"))))
 					})
 					h.Return(Id(childNameLower + "s"))
@@ -325,11 +325,25 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 					if column.ColumnType.Type == "int" && strings.HasSuffix(column.Name, "_id") {
 						//d[Id(fieldNameCaps)] = Qual(const_UtilsPath,const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
 						continue
+					} else if column.ColumnType.Type == "int" && column.IsNull == 0 {
+						d[Id(fieldNameCaps)] = Qual(const_UtilsPath, const_UtilsInt32ToUint).Call(Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+						continue
+					} else if column.ColumnType.Type == "int" && column.IsNull == 1{
+						d[Id(fieldNameCaps)] = Qual(const_UtilsPath, const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+						continue
 					}
+
 					if column.ColumnType.Type == "varchar" && strings.HasSuffix(column.Name, "_type") {
 						//d[Id(fieldNameCaps)] = Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps)
 						continue
+					} else if column.ColumnType.Type == "varchar" && column.IsNull == 0 {
+						d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+						continue
+					} else if column.ColumnType.Type == "varchar" && column.IsNull == 1{
+						d[Id(fieldNameCaps)] = Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+						continue
 					}
+
 					d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
 
 				}
@@ -345,16 +359,22 @@ func createEntitiesResolver(resolverFile *File, entityName string, entity Entity
 						continue
 					}
 
-					if column.ColumnType.Type == "int" {
+					if column.ColumnType.Type == "int" && column.IsNull == 1 {
 						d[Id(fieldNameCaps)] = Qual(const_UtilsPath, const_UtilsInt32ToUint).Call(Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps))
 						continue
+					} else if column.ColumnType.Type == "int" && column.IsNull == 0 {
+						d[Id(fieldNameCaps)] = Qual(const_UtilsPath, const_UtilsInt32ToUint).Call(Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps))
+						continue
 					}
-					if column.ColumnType.Type == "varchar" && strings.HasSuffix(column.Name, "_type") {
+
+					if column.ColumnType.Type == "varchar" && (strings.HasSuffix(column.Name, "_type") || column.IsNull ==1) {
 						d[Id(fieldNameCaps)] = Id("*mygraphql" + entityName).Op(".").Id(fieldNameCaps)
+						continue
+					} else if column.ColumnType.Type == "varchar" && column.IsNull ==0{
+						d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
 						continue
 					}
 					d[Id(fieldNameCaps)] = Id("mygraphql" + entityName).Op(".").Id(fieldNameCaps)
-
 				}
 			})))
 
@@ -1018,8 +1038,7 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 
 			g.If(Id("args.CascadeDelete").Op("==").True()).BlockFunc(func(h *Group) {
 
-
-				if v.RelationTypeID==7{
+				if v.RelationTypeID == 7 {
 					h.Var().Id("data []models." + entityName)
 					h.Qual(const_DatabasePath, "SQL.Model").Call(Id("models." + entityName).Values()).Op(".").
 						Id("Where").Call(Lit("par_id=?"), Qual(const_UtilsPath, const_UtilsConvertId).Call(Id("args.ID"))).Dot("Find").Call(Id("&data"))
@@ -1155,10 +1174,10 @@ func entitiesdeleteResolver(resolverFile *File, entityName string, entity Entity
 			g.Empty()
 
 			g.Var().Id("flag").Int()
-			if v.RelationTypeID==7{
+			if v.RelationTypeID == 7 {
 				g.Var().Id("data").Id("[]models." + entityName)
 
-			}else {
+			} else {
 				g.Var().Id("data").Id("models." + entityName)
 
 			}
