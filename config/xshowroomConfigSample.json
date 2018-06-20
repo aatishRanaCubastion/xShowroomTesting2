@@ -5,279 +5,799 @@
     "Entities": [
       {
         "Name": "x_account",
-        "DisplayName": "Account"
+        "DisplayName": "Account",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 100
+          },
+          {
+            "Name": "email",
+            "DisplayName": "Email",
+            "Type": 2,
+            "Size": 100
+          },
+          {
+            "Name": "phone_number",
+            "DisplayName": "PhoneNumber",
+            "Type": 2,
+            "Size": 15
+          },
+          {
+            "Name": "address_line_1",
+            "DisplayName": "AddressLine1",
+            "Type": 2,
+            "Size": 250
+          },
+          {
+            "Name": "address_line_2",
+            "DisplayName": "AddressLine2",
+            "Type": 2,
+            "Size": 250
+          },
+          {
+            "Name": "city",
+            "DisplayName": "City",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "state",
+            "DisplayName": "State",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "zipcode",
+            "DisplayName": "ZipCode",
+            "Type": 2,
+            "Size": 10
+          },
+          {
+            "Name": "profile_photo_name",
+            "DisplayName": "ProfilePhotoName",
+            "Type": 2,
+            "Size": 100
+          },
+          {
+            "Name": "gender_cd",
+            "DisplayName": "Gender",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "occupation_cd",
+            "DisplayName": "Occupation",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "salary_level",
+            "DisplayName": "SalaryLevel",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "twitter_id",
+            "DisplayName": "TwitterId",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "facebook_id",
+            "DisplayName": "FacebookId",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "linkedin_id",
+            "DisplayName": "LinkedId",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "organization_id",
+            "DisplayName": "OrganizationId",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_by",
+            "DisplayName": "CreatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "updated_by",
+            "DisplayName": "UpdatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_at",
+            "DisplayName": "CreatedAt",
+            "Type": 3,
+            "Size": 30
+          },
+          {
+            "Name": "updated_at",
+            "DisplayName": "UpdatedAt",
+            "Type": 3,
+            "Size": 30
+          }
+        ]
       },
       {
         "Name": "x_act_notes",
-        "DisplayName": "ActivityNotes"
+        "DisplayName": "ActivityNotes",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "desc_text",
+            "DisplayName": "DescriptionText",
+            "Type": 2,
+            "Size": 1000
+          },
+          {
+            "Name": "activity_id",
+            "DisplayName": "ActivityId",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_by",
+            "DisplayName": "CreatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "updated_by",
+            "DisplayName": "UpdatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_at",
+            "DisplayName": "CreatedAt",
+            "Type": 3,
+            "Size": 30
+          },
+          {
+            "Name": "updated_at",
+            "DisplayName": "UpdatedAt",
+            "Type": 3,
+            "Size": 30
+          }
+        ]
       },
       {
         "Name": "x_api_tracker",
-        "DisplayName": "ApiTracker"
+        "DisplayName": "ApiTracker",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "user_email",
+            "DisplayName": "UserEmail",
+            "Type": 2,
+            "Size": 50
+          },
+          {
+            "Name": "user_device_id",
+            "DisplayName": "UserDeviceId",
+            "Type": 2,
+            "Size": 50
+          },
+          {
+            "Name": "lat_coord",
+            "DisplayName": "Latitude",
+            "Type": 2,
+            "Size": 50
+          },
+          {
+            "Name": "long_coord",
+            "DisplayName": "Longitude",
+            "Type": 2,
+            "Size": 50
+          },
+          {
+            "Name": "api_name",
+            "DisplayName": "ApiName",
+            "Type": 2,
+            "Size": 100
+          },
+          {
+            "Name": "request_body",
+            "DisplayName": "RequestBody",
+            "Type": 2,
+            "Size": 2500
+          },
+          {
+            "Name": "error_message",
+            "DisplayName": "ErrorMessage",
+            "Type": 2,
+            "Size": 2500
+          },
+          {
+            "Name": "status_cd",
+            "DisplayName": "Status",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "organization_id",
+            "DisplayName": "OrganizationId",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_at",
+            "DisplayName": "CreatedAt",
+            "Type": 3,
+            "Size": 30
+          },
+          {
+            "Name": "updated_at",
+            "DisplayName": "UpdatedAt",
+            "Type": 3,
+            "Size": 30
+          }
+        ]
       },
       {
         "Name": "x_app_login_attempt",
-        "DisplayName": "AppLoginAttempt"
+        "DisplayName": "AppLoginAttempt",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "device_id",
+            "DisplayName": "DeviceId",
+            "Type": 2,
+            "Size": 100
+          },
+          {
+            "Name": "user_email",
+            "DisplayName": "UserEmail",
+            "Type": 2,
+            "Size": 100
+          },
+          {
+            "Name": "status_cd",
+            "DisplayName": "StatusCode",
+            "Type": 2,
+            "Size": 10
+          },
+          {
+            "Name": "status_message",
+            "DisplayName": "StatusMessage",
+            "Type": 2,
+            "Size": 100
+          },
+          {
+            "Name": "organization_id",
+            "DisplayName": "OrganizationId",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_at",
+            "DisplayName": "CreatedAt",
+            "Type": 3,
+            "Size": 30
+          },
+          {
+            "Name": "updated_at",
+            "DisplayName": "UpdatedAt",
+            "Type": 3,
+            "Size": 30
+          }
+        ]
       },
       {
         "Name": "x_asset_folder",
-        "DisplayName": "AssetFolder"
+        "DisplayName": "AssetFolder",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30
+          },
+          {
+            "Name": "par_id",
+            "DisplayName": "ParentId",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "organization_id",
+            "DisplayName": "OrganizationId",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_by",
+            "DisplayName": "CreatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "updated_by",
+            "DisplayName": "UpdatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_at",
+            "DisplayName": "CreatedAt",
+            "Type": 3,
+            "Size": 30
+          },
+          {
+            "Name": "updated_at",
+            "DisplayName": "UpdatedAt",
+            "Type": 3,
+            "Size": 30
+          }
+        ]
       },
       {
         "Name": "x_att",
-        "DisplayName": "Attachment"
+        "DisplayName": "Attachment",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 191
+          },
+          {
+            "Name": "folder_id",
+            "DisplayName": "FolderId",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "organization_id",
+            "DisplayName": "OrganizationId",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_by",
+            "DisplayName": "CreatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "updated_by",
+            "DisplayName": "UpdatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_at",
+            "DisplayName": "CreatedAt",
+            "Type": 3,
+            "Size": 30
+          },
+          {
+            "Name": "updated_at",
+            "DisplayName": "UpdatedAt",
+            "Type": 3,
+            "Size": 30
+          }
+        ]
       },
       {
         "Name": "x_att_dtl",
-        "DisplayName": "AttacyhmentDetail"
+        "DisplayName": "AttachmentDetail",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "place_holder",
+            "DisplayName": "PlaceHolder",
+            "Type": 2,
+            "Size": 191
+          },
+          {
+            "Name": "version_num",
+            "DisplayName": "VersionNumber",
+            "Type": 1,
+            "Size": 11
+          },
+          {
+            "Name": "file_ext_type",
+            "DisplayName": "FileExtensionType",
+            "Type": 2,
+            "Size": 191
+          },
+          {
+            "Name": "attachment_name",
+            "DisplayName": "AttachmentName",
+            "Type": 2,
+            "Size": 191
+          },
+          {
+            "Name": "att_id",
+            "DisplayName": "AttachmentId",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_by",
+            "DisplayName": "CreatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "updated_by",
+            "DisplayName": "UpdatedBy",
+            "Type": 1,
+            "Size": 10
+          },
+          {
+            "Name": "created_at",
+            "DisplayName": "CreatedAt",
+            "Type": 3,
+            "Size": 30
+          },
+          {
+            "Name": "updated_at",
+            "DisplayName": "UpdatedAt",
+            "Type": 3,
+            "Size": 30
+          }
+        ]
       },
       {
         "Name": "x_catalog",
-        "DisplayName": "Catalog"
+        "DisplayName": "Catalog",
+        "Fields": []
       },
       {
         "Name": "x_catalog_prod",
-        "DisplayName": "CatalogProduct"
+        "DisplayName": "CatalogProduct",
+        "Fields": []
       },
       {
         "Name": "x_catalog_users",
-        "DisplayName": "CatalogUser"
+        "DisplayName": "CatalogUser",
+        "Fields": []
       },
       {
         "Name": "x_competitor",
-        "DisplayName": "Competitor"
+        "DisplayName": "Competitor",
+        "Fields": []
       },
       {
         "Name": "x_demo",
-        "DisplayName": "Demo"
+        "DisplayName": "Demo",
+        "Fields": []
       },
       {
         "Name": "x_demo_group",
-        "DisplayName": "DemoGroup"
+        "DisplayName": "DemoGroup",
+        "Fields": []
       },
       {
         "Name": "x_demo_group_container",
-        "DisplayName": "DemoGroupContainer"
+        "DisplayName": "DemoGroupContainer",
+        "Fields": []
       },
       {
         "Name": "x_demo_group_dtl",
-        "DisplayName": "DemoGroupDetail"
+        "DisplayName": "DemoGroupDetail",
+        "Fields": []
       },
       {
         "Name": "x_demo_group_dtl_item",
-        "DisplayName": "DemoGroupDetailItem"
+        "DisplayName": "DemoGroupDetailItem",
+        "Fields": []
       },
       {
         "Name": "x_device",
-        "DisplayName": "Device"
+        "DisplayName": "Device",
+        "Fields": []
       },
       {
         "Name": "x_email_template",
-        "DisplayName": "EmailTemplate"
+        "DisplayName": "EmailTemplate",
+        "Fields": []
       },
       {
         "Name": "x_email_template_dtl",
-        "DisplayName": "EmailTemplateDetail"
+        "DisplayName": "EmailTemplateDetail",
+        "Fields": []
       },
       {
         "Name": "x_evt_act",
-        "DisplayName": "Activity"
+        "DisplayName": "Activity",
+        "Fields": []
       },
       {
         "Name": "x_lead",
-        "DisplayName": "Lead"
+        "DisplayName": "Lead",
+        "Fields": []
       },
       {
         "Name": "x_lead_att",
-        "DisplayName": "LeadAttachment"
+        "DisplayName": "LeadAttachment",
+        "Fields": []
       },
       {
         "Name": "x_lead_competitors",
-        "DisplayName": "LeadCompetitor"
+        "DisplayName": "LeadCompetitor",
+        "Fields": []
       },
       {
         "Name": "x_lead_notes",
-        "DisplayName": "Note"
+        "DisplayName": "Note",
+        "Fields": []
       },
       {
         "Name": "x_lead_prod",
-        "DisplayName": "LeadProduct"
+        "DisplayName": "LeadProduct",
+        "Fields": []
       },
       {
         "Name": "x_lead_prod_attr",
-        "DisplayName": "LeadProductAttribute"
+        "DisplayName": "LeadProductAttribute",
+        "Fields": []
       },
       {
         "Name": "x_lead_stage_transition",
-        "DisplayName": "LeadStageTransition"
+        "DisplayName": "LeadStageTransition",
+        "Fields": []
       },
       {
         "Name": "x_list_of_val",
-        "DisplayName": "ListOfValue"
+        "DisplayName": "ListOfValue",
+        "Fields": []
       },
       {
         "Name": "x_master_release",
-        "DisplayName": "MasterRelease"
+        "DisplayName": "MasterRelease",
+        "Fields": []
       },
       {
         "Name": "x_option",
-        "DisplayName": "Option"
+        "DisplayName": "Option",
+        "Fields": []
       },
       {
         "Name": "x_option_attr",
-        "DisplayName": "optionAttribute"
+        "DisplayName": "optionAttribute",
+        "Fields": []
       },
       {
         "Name": "x_opt_attr_pri_comp",
-        "DisplayName": "OptionAttributePricingComponent"
+        "DisplayName": "OptionAttributePricingComponent",
+        "Fields": []
       },
       {
         "Name": "x_opt_attr_pri_dim",
-        "DisplayName": "OptionAttributePricingDimension"
+        "DisplayName": "OptionAttributePricingDimension",
+        "Fields": []
       },
       {
         "Name": "x_org_ext",
-        "DisplayName": "Organization"
+        "DisplayName": "Organization",
+        "Fields": []
       },
       {
         "Name": "x_pipeline_sales_stages",
-        "DisplayName": "PipelineSalesStages"
+        "DisplayName": "PipelineSalesStages",
+        "Fields": []
       },
       {
         "Name": "x_postn",
-        "DisplayName": "Position"
+        "DisplayName": "Position",
+        "Fields": []
       },
       {
         "Name": "x_pri_comp",
-        "DisplayName": "PricingComponent"
+        "DisplayName": "PricingComponent",
+        "Fields": []
       },
       {
         "Name": "x_pri_comp_def",
-        "DisplayName": "PricingComponentDefinition"
+        "DisplayName": "PricingComponentDefinition",
+        "Fields": []
       },
       {
         "Name": "x_pri_comp_group",
-        "DisplayName": "PricingComponentGroup"
+        "DisplayName": "PricingComponentGroup",
+        "Fields": []
       },
       {
         "Name": "x_pri_comp_group_item",
-        "DisplayName": "PricingComponentGroupItem"
+        "DisplayName": "PricingComponentGroupItem",
+        "Fields": []
       },
       {
         "Name": "x_pri_dd",
-        "DisplayName": "PricingDimensionDefinition"
+        "DisplayName": "PricingDimensionDefinition",
+        "Fields": []
       },
       {
         "Name": "x_pri_dim",
-        "DisplayName": "PricingDimension"
+        "DisplayName": "PricingDimension",
+        "Fields": []
       },
       {
         "Name": "x_prod",
-        "DisplayName": "Product"
+        "DisplayName": "Product",
+        "Fields": []
       },
       {
         "Name": "x_prod_demo_group",
-        "DisplayName": "ProductDemoGroup"
+        "DisplayName": "ProductDemoGroup",
+        "Fields": []
       },
       {
         "Name": "x_prod_demo_group_dtl",
-        "DisplayName": "ProductDemoGroupDetail"
+        "DisplayName": "ProductDemoGroupDetail",
+        "Fields": []
       },
       {
         "Name": "x_prod_feature_grp",
-        "DisplayName": "ProductFeatureGroup"
+        "DisplayName": "ProductFeatureGroup",
+        "Fields": []
       },
       {
         "Name": "x_prod_feature_item",
-        "DisplayName": "ProductFeatureItem"
+        "DisplayName": "ProductFeatureItem",
+        "Fields": []
       },
       {
         "Name": "x_prod_grp_prod_intertables",
-        "DisplayName": "ProductGroupProduct"
+        "DisplayName": "ProductGroupProduct",
+        "Fields": []
       },
       {
         "Name": "x_prod_In_feature_grp",
-        "DisplayName": "ProductInFeatureGroup"
+        "DisplayName": "ProductInFeatureGroup",
+        "Fields": []
       },
       {
         "Name": "x_prod_In_feature_item",
-        "DisplayName": "ProductInFeatureItem"
+        "DisplayName": "ProductInFeatureItem",
+        "Fields": []
       },
       {
         "Name": "x_prod_option",
-        "DisplayName": "ProductOption"
+        "DisplayName": "ProductOption",
+        "Fields": []
       },
       {
         "Name": "x_prod_option_attr",
-        "DisplayName": "ProductOptionAttribute"
+        "DisplayName": "ProductOptionAttribute",
+        "Fields": []
       },
       {
         "Name": "x_prod_pri_comp",
-        "DisplayName": "ProductPricingComponent"
+        "DisplayName": "ProductPricingComponent",
+        "Fields": []
       },
       {
         "Name": "x_prod_pri_dim",
-        "DisplayName": "ProductPricingDimension"
+        "DisplayName": "ProductPricingDimension",
+        "Fields": []
       },
       {
         "Name": "x_prod_rel_prod_grps",
-        "DisplayName": "ProductRelatedProductGroup"
+        "DisplayName": "ProductRelatedProductGroup",
+        "Fields": []
       },
       {
         "Name": "x_prod_rpt_group",
-        "DisplayName": "ProductReportGroup"
+        "DisplayName": "ProductReportGroup",
+        "Fields": []
       },
       {
         "Name": "x_quarter_def",
-        "DisplayName": "QuaterDefinition"
+        "DisplayName": "QuaterDefinition",
+        "Fields": []
       },
       {
         "Name": "rel_prd_grp_def",
-        "DisplayName": "ProductGroupDefinition"
+        "DisplayName": "ProductGroupDefinition",
+        "Fields": []
       },
       {
         "Name": "rel_prd_grp_def_prods",
-        "DisplayName": "ProductGroupDefinitionProduct"
+        "DisplayName": "ProductGroupDefinitionProduct",
+        "Fields": []
       },
       {
         "Name": "x_sales_method",
-        "DisplayName": "SalesMethod"
+        "DisplayName": "SalesMethod",
+        "Fields": []
       },
       {
         "Name": "x_sales_stage",
-        "DisplayName": "SalesStages"
+        "DisplayName": "SalesStages",
+        "Fields": []
       },
       {
         "Name": "x_sales_target",
-        "DisplayName": "SalesTarget"
+        "DisplayName": "SalesTarget",
+        "Fields": []
       },
       {
         "Name": "x_sales_target_period",
-        "DisplayName": "SalesTargetPeriod"
+        "DisplayName": "SalesTargetPeriod",
+        "Fields": []
       },
       {
         "Name": "x_sku",
-        "DisplayName": "StockKeepingUnit"
+        "DisplayName": "StockKeepingUnit",
+        "Fields": []
       },
       {
         "Name": "x_sku_option",
-        "DisplayName": "StockKeepingUnitOption"
+        "DisplayName": "StockKeepingUnitOption",
+        "Fields": []
       },
       {
         "Name": "x_sku_pri_comp",
-        "DisplayName": "StockKeepingUnitPricingComponent"
+        "DisplayName": "StockKeepingUnitPricingComponent",
+        "Fields": []
       },
       {
         "Name": "x_sku_pri_dim",
-        "DisplayName": "StockKeepingUnitPricingDimension"
+        "DisplayName": "StockKeepingUnitPricingDimension",
+        "Fields": []
       },
       {
         "Name": "x_tax_slab",
-        "DisplayName": "TaxSlab"
+        "DisplayName": "TaxSlab",
+        "Fields": []
       },
       {
         "Name": "x_user",
-        "DisplayName": "User"
+        "DisplayName": "User",
+        "Fields": []
       }
     ],
     "Relations": [],
@@ -289,6 +809,10 @@
       {
         "Id": 2,
         "Name": "varchar"
+      },
+      {
+        "Id": 3,
+        "Name": "timestamp"
       }
     ],
     "RelationTypes": [
