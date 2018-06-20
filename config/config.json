@@ -4,7 +4,7 @@
     "MySQL": {
       "Username": "root",
       "Password": "password",
-      "Name": "SampleApp",
+      "Name": "sample",
       "Hostname": "127.0.0.1",
       "Port": 3306,
       "Parameter": "?parseTime=true"
@@ -28,10 +28,30 @@
   },
   "AppInfo": {
     "_comment": "This is a sample data for generating the application, if your schema is not ready yet you can empty this and add you app entities data later.",
-    "Name": "SampleApp",
+    "Name": "sample",
     "Entities": [
       {
-        "Name": "x_user",
+        "Name": "org",
+        "DisplayName": "Org",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          }
+        ]
+      },
+      {
+        "Name": "user",
         "DisplayName": "User",
         "Fields": [
           {
@@ -39,127 +59,88 @@
             "DisplayName": "Id",
             "Type": 1,
             "Size": 30,
-            "IsNull":1
+            "IsNull": 1
           },
           {
-            "Name": "name",
-            "DisplayName": "Name",
+            "Name": "first_name",
+            "DisplayName": "FirstName",
             "Type": 2,
             "Size": 30,
-            "IsNull":0
+            "IsNull": 0
           },
           {
-            "Name": "age",
-            "DisplayName": "Age",
+            "Name": "last_name",
+            "DisplayName": "LastName",
             "Type": 2,
             "Size": 30,
-            "IsNull":0
+            "IsNull": 0
+          },
+          {
+            "Name": "email",
+            "DisplayName": "Email",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "password",
+            "DisplayName": "Password",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "token",
+            "DisplayName": "Token",
+            "Type": 2,
+            "Size": 100,
+            "IsNull": 0
+          },
+          {
+            "Name": "org_id",
+            "DisplayName": "OrgId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
           }
         ]
       },
       {
-        "Name": "x_position",
-        "DisplayName": "Position",
+        "Name": "team",
+        "DisplayName": "Team",
         "Fields": [
           {
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
             "Size": 30,
-            "IsNull":1
+            "IsNull": 1
           },
           {
             "Name": "name",
             "DisplayName": "Name",
             "Type": 2,
             "Size": 30,
-            "IsNull":0
-          },
-          {
-            "Name": "par_id",
-            "DisplayName": "ParId",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          }
-        ]
-      },
-      {
-        "Name": "x_device",
-        "DisplayName": "Device",
-        "Fields": [
-          {
-            "Name": "id",
-            "DisplayName": "Id",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "uuid",
-            "DisplayName": "Uuid",
-            "Type": 2,
-            "Size": 30,
-            "IsNull":0
+            "IsNull": 0
           },
           {
             "Name": "user_id",
             "DisplayName": "UserId",
             "Type": 1,
             "Size": 30,
-            "IsNull":1
+            "IsNull": 1
+          },
+          {
+            "Name": "org_id",
+            "DisplayName": "OrgId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
           }
         ]
       },
       {
-        "Name": "x_account",
-        "DisplayName": "Account",
-        "Fields": [
-          {
-            "Name": "id",
-            "DisplayName": "Id",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "name",
-            "DisplayName": "Name",
-            "Type": 2,
-            "Size": 30,
-            "IsNull":0
-          }
-        ]
-      },
-      {
-        "Name": "x_lead",
-        "DisplayName": "Lead",
-        "Fields": [
-          {
-            "Name": "id",
-            "DisplayName": "Id",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "name",
-            "DisplayName": "Name",
-            "Type": 2,
-            "Size": 30,
-            "IsNull":0
-          },
-          {
-            "Name": "account_id",
-            "DisplayName": "AccountId",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          }
-        ]
-      },
-      {
-        "Name": "x_product",
+        "Name": "product",
         "DisplayName": "Product",
         "Fields": [
           {
@@ -167,274 +148,512 @@
             "DisplayName": "Id",
             "Type": 1,
             "Size": 30,
-            "IsNull":1
+            "IsNull": 1
           },
           {
             "Name": "name",
             "DisplayName": "Name",
             "Type": 2,
             "Size": 30,
-            "IsNull":0
+            "IsNull": 0
+          },
+          {
+            "Name": "desc",
+            "DisplayName": "Desc",
+            "Type": 2,
+            "Size": 100,
+            "IsNull": 0
+          },
+          {
+            "Name": "user_id",
+            "DisplayName": "UserId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "org_id",
+            "DisplayName": "OrgId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
           }
         ]
       },
       {
-        "Name": "x_related_product_group",
-        "DisplayName": "RelatedProductGroup",
+        "Name": "product_back_log",
+        "DisplayName": "ProductBackLog",
         "Fields": [
           {
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
             "Size": 30,
-            "IsNull":1
+            "IsNull": 1
           },
           {
-            "Name": "name",
-            "DisplayName": "Name",
+            "Name": "desc",
+            "DisplayName": "Desc",
+            "Type": 2,
+            "Size": 100,
+            "IsNull": 0
+          },
+          {
+            "Name": "type_cd",
+            "DisplayName": "TypeCd",
             "Type": 2,
             "Size": 30,
-            "IsNull":0
-          }
-        ]
-      },
-      {
-        "Name": "x_phone",
-        "DisplayName": "Phone",
-        "Fields": [
+            "IsNull": 0
+          },
           {
-            "Name": "id",
-            "DisplayName": "Id",
+            "Name": "priority",
+            "DisplayName": "Priority",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "user_id",
+            "DisplayName": "UserId",
             "Type": 1,
             "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "phone_number",
-            "DisplayName": "PhoneNumber",
-            "Type": 2,
-            "Size": 30,
-            "IsNull":0
-          },
-          {
-            "Name": "type_id",
-            "DisplayName": "TypeId",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "phone_type",
-            "DisplayName": "PhoneType",
-            "Type": 2,
-            "Size": 30,
-            "IsNull":1
-          }
-        ]
-      },
-      {
-        "Name": "x_sale",
-        "DisplayName": "Sale",
-        "Fields": [
-          {
-            "Name": "id",
-            "DisplayName": "Id",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "name",
-            "DisplayName": "Name",
-            "Type": 2,
-            "Size": 30,
-            "IsNull":0
-          },
-          {
-            "Name": "type_id",
-            "DisplayName": "TypeId",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "sale_type",
-            "DisplayName": "SaleType",
-            "Type": 2,
-            "Size": 30,
-            "IsNull":1
-          }
-        ]
-      },
-      {
-        "Name": "x_profile",
-        "DisplayName": "Profile",
-        "Fields": [
-          {
-            "Name": "id",
-            "DisplayName": "Id",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "name",
-            "DisplayName": "Name",
-            "Type": 2,
-            "Size": 30,
-            "IsNull":0
-          },
-          {
-            "Name": "place",
-            "DisplayName": "Place",
-            "Type": 2,
-            "Size": 30,
-            "IsNull":0
-          }
-        ]
-      },
-      {
-        "Name": "x_product_product_group",
-        "DisplayName": "ProductProductGroup",
-        "Fields": [
-          {
-            "Name": "id",
-            "DisplayName": "Id",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
+            "IsNull": 1
           },
           {
             "Name": "product_id",
             "DisplayName": "ProductId",
             "Type": 1,
             "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "related_product_group_id",
-            "DisplayName": "RelatedProductGroupId",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
+            "IsNull": 1
           }
         ]
       },
       {
-        "Name": "x_product_sale_phone",
-        "DisplayName": "ProductSalePhone",
+        "Name": "project",
+        "DisplayName": "Project",
         "Fields": [
           {
             "Name": "id",
             "DisplayName": "Id",
             "Type": 1,
             "Size": 30,
-            "IsNull":1
+            "IsNull": 1
           },
           {
-            "Name": "sale_id",
-            "DisplayName": "SaleId",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "type_id",
-            "DisplayName": "TypeId",
-            "Type": 1,
-            "Size": 30,
-            "IsNull":1
-          },
-          {
-            "Name": "sale_type",
-            "DisplayName": "SaleType",
+            "Name": "name",
+            "DisplayName": "Name",
             "Type": 2,
             "Size": 30,
-            "IsNull":1
+            "IsNull": 0
+          },
+          {
+            "Name": "user_id",
+            "DisplayName": "UserId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "team_id",
+            "DisplayName": "TeamId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "product_id",
+            "DisplayName": "ProductId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          }
+        ]
+      },
+      {
+        "Name": "story",
+        "DisplayName": "Story",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "desc",
+            "DisplayName": "Desc",
+            "Type": 2,
+            "Size": 100,
+            "IsNull": 0
+          },
+          {
+            "Name": "status",
+            "DisplayName": "Status",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "point",
+            "DisplayName": "Point",
+            "Type": 1,
+            "Size": 10,
+            "IsNull": 0
+          },
+          {
+            "Name": "product_back_log_id",
+            "DisplayName": "ProductBackLogId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "project_id",
+            "DisplayName": "ProjectId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "sprint_id",
+            "DisplayName": "SprintId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          }
+        ]
+      },
+      {
+        "Name": "sprint",
+        "DisplayName": "Sprint",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "start_dt",
+            "DisplayName": "StartDate",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "end_dt",
+            "DisplayName": "EndDate",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "project_id",
+            "DisplayName": "ProjectId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          }
+        ]
+      },
+      {
+        "Name": "phase",
+        "DisplayName": "Phase",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "name",
+            "DisplayName": "Name",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          }
+        ]
+      },
+      {
+        "Name": "task",
+        "DisplayName": "Task",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "sprint_id",
+            "DisplayName": "SprintId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "story_id",
+            "DisplayName": "StoryId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "sprint_phase_id",
+            "DisplayName": "SprintPhaseId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "user_id",
+            "DisplayName": "UserId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "point",
+            "DisplayName": "Point",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "start_dt_tm",
+            "DisplayName": "StartDateTime",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          },
+          {
+            "Name": "end_dt_tm",
+            "DisplayName": "EndDateTime",
+            "Type": 2,
+            "Size": 30,
+            "IsNull": 0
+          }
+        ]
+      },
+      {
+        "Name": "user_team",
+        "DisplayName": "UserTeam",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "user_id",
+            "DisplayName": "UserId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "team_id",
+            "DisplayName": "TeamId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          }
+        ]
+      },
+      {
+        "Name": "sprint_phase",
+        "DisplayName": "SprintPhase",
+        "Fields": [
+          {
+            "Name": "id",
+            "DisplayName": "Id",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "sprint_id",
+            "DisplayName": "SprintId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
+          },
+          {
+            "Name": "phase_id",
+            "DisplayName": "PhaseId",
+            "Type": 1,
+            "Size": 30,
+            "IsNull": 1
           }
         ]
       }
     ],
     "Relations": [
       {
-        "ParentEntity": "x_user",
+        "ParentEntity": "org",
         "ParentEntityField": "id",
-        "ChildEntity": "x_device",
+        "ChildEntity": "user",
+        "ChildEntityField": "org_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "org",
+        "ParentEntityField": "id",
+        "ChildEntity": "team",
+        "ChildEntityField": "org_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "org",
+        "ParentEntityField": "id",
+        "ChildEntity": "product",
+        "ChildEntityField": "org_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "user",
+        "ParentEntityField": "id",
+        "ChildEntity": "team",
         "ChildEntityField": "user_id",
         "Pivot": "",
         "Type": 1
       },
       {
-        "ParentEntity": "x_account",
+        "ParentEntity": "user",
         "ParentEntityField": "id",
-        "ChildEntity": "x_lead",
-        "ChildEntityField": "account_id",
+        "ChildEntity": "product",
+        "ChildEntityField": "user_id",
+        "Pivot": "",
+        "Type": 1
+      },
+      {
+        "ParentEntity": "user",
+        "ParentEntityField": "id",
+        "ChildEntity": "product_back_log",
+        "ChildEntityField": "user_id",
         "Pivot": "",
         "Type": 2
       },
       {
-        "ParentEntity": "x_product",
+        "ParentEntity": "user",
         "ParentEntityField": "id",
-        "ChildEntity": "x_related_product_group",
+        "ChildEntity": "project",
+        "ChildEntityField": "user_id",
+        "Pivot": "",
+        "Type": 1
+      },
+      {
+        "ParentEntity": "user",
+        "ParentEntityField": "id",
+        "ChildEntity": "task",
+        "ChildEntityField": "user_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "team",
+        "ParentEntityField": "id",
+        "ChildEntity": "project",
+        "ChildEntityField": "team_id",
+        "Pivot": "",
+        "Type": 1
+      },
+      {
+        "ParentEntity": "product",
+        "ParentEntityField": "id",
+        "ChildEntity": "product_back_log",
+        "ChildEntityField": "product_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "product",
+        "ParentEntityField": "id",
+        "ChildEntity": "project",
+        "ChildEntityField": "product_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "product_back_log",
+        "ParentEntityField": "id",
+        "ChildEntity": "story",
+        "ChildEntityField": "product_back_log_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "project",
+        "ParentEntityField": "id",
+        "ChildEntity": "story",
+        "ChildEntityField": "project_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "project",
+        "ParentEntityField": "id",
+        "ChildEntity": "sprint",
+        "ChildEntityField": "project_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "sprint",
+        "ParentEntityField": "id",
+        "ChildEntity": "story",
+        "ChildEntityField": "sprint_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "sprint",
+        "ParentEntityField": "id",
+        "ChildEntity": "task",
+        "ChildEntityField": "sprint_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "story",
+        "ParentEntityField": "id",
+        "ChildEntity": "task",
+        "ChildEntityField": "story_id",
+        "Pivot": "",
+        "Type": 2
+      },
+      {
+        "ParentEntity": "user",
+        "ParentEntityField": "id",
+        "ChildEntity": "team",
         "ChildEntityField": "id",
-        "Pivot": "x_product_product_group",
+        "Pivot": "user_team",
         "Type": 3
       },
       {
-        "ParentEntity": "x_user",
+        "ParentEntity": "sprint",
         "ParentEntityField": "id",
-        "ChildEntity": "x_phone",
-        "ChildEntityField": "type_id",
-        "Pivot": "",
-        "Type": 4
-      },
-      {
-        "ParentEntity": "x_account",
-        "ParentEntityField": "id",
-        "ChildEntity": "x_phone",
-        "ChildEntityField": "type_id",
-        "Pivot": "",
-        "Type": 4
-      },
-      {
-        "ParentEntity": "x_account",
-        "ParentEntityField": "id",
-        "ChildEntity": "x_sale",
-        "ChildEntityField": "type_id",
-        "Pivot": "",
-        "Type": 5
-      },
-      {
-        "ParentEntity": "x_profile",
-        "ParentEntityField": "id",
-        "ChildEntity": "x_sale",
-        "ChildEntityField": "type_id",
-        "Pivot": "",
-        "Type": 5
-      },
-      {
-        "ParentEntity": "x_product",
-        "ParentEntityField": "id",
-        "ChildEntity": "x_sale",
+        "ChildEntity": "phase",
         "ChildEntityField": "id",
-        "Pivot": "x_product_sale_phone",
-        "Type": 6
-      },
-      {
-        "ParentEntity": "x_phone",
-        "ParentEntityField": "id",
-        "ChildEntity": "x_sale",
-        "ChildEntityField": "id",
-        "Pivot": "x_product_sale_phone",
-        "Type": 6
-      },
-      {
-        "ParentEntity": "x_position",
-        "ParentEntityField": "id",
-        "ChildEntity": "x_position",
-        "ChildEntityField": "par_id",
-        "Pivot": "",
-        "Type": 7
+        "Pivot": "sprint_phase",
+        "Type": 3
       }
     ],
     "FieldTypes": [
@@ -472,7 +691,6 @@
         "Id": 6,
         "Name": "PolyManyToMany"
       },
-
       {
         "Id": 7,
         "Name": "Self"
