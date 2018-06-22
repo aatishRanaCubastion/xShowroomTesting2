@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	SQL       *gorm.DB
+	SQL *gorm.DB
 	databases Info
 )
 
@@ -37,6 +37,9 @@ func Connect(d Info) {
 
 	databases = d
 
+	//(Creates) or (Deletes and Creates) new database as mentioned in present config file
+	createMainDatabase(d)
+
 	switch d.Type {
 	case TypeMySQL:
 		// Connect to MySQL
@@ -64,4 +67,35 @@ func DSN(ci MySQLInfo) string {
 		fmt.Sprintf("%d", ci.Port) +
 		")/" +
 		ci.Name + ci.Parameter
+}
+
+func createMainDatabase(d Info) {
+	var err error
+
+	SQL, err = gorm.Open("mysql", "root:password@tcp(127.0.0.1:3306)/")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer SQL.Close()
+	rows, _ := SQL.Raw("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", d.MySQL.Name).Rows()
+	if rows.Next() {
+		newDb := SQL.Exec("DROP DATABASE " + d.MySQL.Name)
+
+		newDb = SQL.Exec("CREATE DATABASE " + d.MySQL.Name)
+		if newDb != nil {
+			fmt.Println("Database dropped and then created !")
+		} else {
+			fmt.Println("Database dropped and Error occured in creation !")
+		}
+
+	} else {
+		newDb := SQL.Exec("CREATE DATABASE " + d.MySQL.Name)
+		if newDb != nil {
+			fmt.Println("Database not found and thus created !")
+		} else {
+			fmt.Println("Database not found and Error occured in creation !")
+		}
+	}
+
+	SQL.Close()
 }

@@ -138,7 +138,7 @@ type EntityField struct {
 	FieldType string
 }
 
-func GenerateCode(appName string) {
+func GenerateCode(appName string , configrationFileName string) {
 
 	//fetch all entities
 	entities := []Entity{}
@@ -192,7 +192,7 @@ func GenerateCode(appName string) {
 	appMain := NewFile("main")
 
 	//write all code
-	createAppMain(appMain, allModels)
+	createAppMain(appMain, allModels , configrationFileName)
 
 	//flush xShowroom.go
 	fmt.Fprintf(fileResolver, "%#v", appResolver)
@@ -203,14 +203,14 @@ func GenerateCode(appName string) {
 }
 
 //xShowroom generation methods
-func createAppMain(appMain *File, allModels []string) {
+func createAppMain(appMain *File, allModels []string , configrationFileName string) {
 
 	//create an instance of configuration
 	appMain.Var().Id("conf").Op("= &").Qual("config", "Configuration{}")
 
 	createAppMainInitMethod(appMain)
 
-	createAppMainMainMethod(appMain, allModels)
+	createAppMainMainMethod(appMain, allModels , configrationFileName)
 }
 
 func createAppMainInitMethod(appMain *File) {
@@ -221,7 +221,7 @@ func createAppMainInitMethod(appMain *File) {
 	)
 }
 
-func createAppMainMainMethod(appMain *File, allModels []string) {
+func createAppMainMainMethod(appMain *File, allModels []string ,configrationFileName string) {
 
 	//add main method in appMain.go
 	appMain.Func().Id("main").Params().Block(
@@ -235,7 +235,7 @@ func createAppMainMainMethod(appMain *File, allModels []string) {
 				Qual("os", "PathSeparator").
 				Op(")").
 				Op("+").
-				Lit("config.json"),
+				Lit(configrationFileName),
 			Id("conf")),
 
 		Empty(),

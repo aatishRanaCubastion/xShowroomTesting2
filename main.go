@@ -20,7 +20,7 @@ func main() {
 	flag.Parse()
 
 	// Load the configuration file
-	jsonconfig.Load("config"+string(os.PathSeparator)+"config.json", con)
+	jsonconfig.Load("config"+string(os.PathSeparator)+"config2.json", con)
 
 	// Connect to database
 	database.Connect(con.Database)
@@ -37,7 +37,7 @@ func main() {
 		upsertSampleData()
 	}
 
-	generator.GenerateCode(con.AppInfo.Name)
+	generator.GenerateCode(con.AppInfo.Name, "config2.json")
 }
 
 func upsertSampleData() {
