@@ -32,13 +32,15 @@ type MySQLInfo struct {
 	Parameter string
 }
 
-func Connect(d Info) {
+func Connect(d Info, from string) {
 	var err error
 
 	databases = d
 
 	//(Creates) or (Deletes and Creates) new database as mentioned in present config file
-	createMainDatabase(d)
+	if (from == "main") {
+		createMainDatabase(d)
+	}
 
 	switch d.Type {
 	case TypeMySQL:

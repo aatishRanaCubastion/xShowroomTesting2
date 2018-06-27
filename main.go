@@ -23,7 +23,7 @@ func main() {
 	jsonconfig.Load("config"+string(os.PathSeparator)+"config2.json", con)
 
 	// Connect to database
-	database.Connect(con.Database)
+	database.Connect(con.Database , "main")
 
 	// Migrate tables
 	database.SQL.AutoMigrate(&generator.Entity{},
