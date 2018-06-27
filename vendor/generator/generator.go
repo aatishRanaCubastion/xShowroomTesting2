@@ -242,7 +242,7 @@ func createAppMainMainMethod(appMain *File, allModels []string ,configrationFile
 
 		Comment("Connect to database"),
 		Qual(const_DatabasePath, "Connect").Call(
-			Id("conf").Op(".").Id("Database"),Lit("app"),
+			Id("conf").Op(".").Id("Database"),
 		),
 
 		Empty(),

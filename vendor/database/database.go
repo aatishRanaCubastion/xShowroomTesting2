@@ -32,15 +32,42 @@ type MySQLInfo struct {
 	Parameter string
 }
 
-func Connect(d Info, from string) {
+//(Creates) or (Deletes and Creates) new database as mentioned in present config file
+func CreateMainDatabase(d Info) {
+	var err error
+
+	SQL, err = gorm.Open("mysql", "root:password@tcp(127.0.0.1:3306)/")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer SQL.Close()
+	rows, _ := SQL.Raw("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", d.MySQL.Name).Rows()
+	if rows.Next() {
+		newDb := SQL.Exec("DROP DATABASE " + d.MySQL.Name)
+
+		newDb = SQL.Exec("CREATE DATABASE " + d.MySQL.Name)
+		if newDb != nil {
+			fmt.Println("Database dropped and then created !")
+		} else {
+			fmt.Println("Database dropped and Error occured in creation !")
+		}
+
+	} else {
+		newDb := SQL.Exec("CREATE DATABASE " + d.MySQL.Name)
+		if newDb != nil {
+			fmt.Println("Database not found and thus created !")
+		} else {
+			fmt.Println("Database not found and Error occured in creation !")
+		}
+	}
+
+	SQL.Close()
+}
+
+func Connect(d Info) {
 	var err error
 
 	databases = d
-
-	//(Creates) or (Deletes and Creates) new database as mentioned in present config file
-	if (from == "main") {
-		createMainDatabase(d)
-	}
 
 	switch d.Type {
 	case TypeMySQL:
@@ -71,33 +98,3 @@ func DSN(ci MySQLInfo) string {
 		ci.Name + ci.Parameter
 }
 
-func createMainDatabase(d Info) {
-	var err error
-
-	SQL, err = gorm.Open("mysql", "root:password@tcp(127.0.0.1:3306)/")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer SQL.Close()
-	rows, _ := SQL.Raw("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = ?", d.MySQL.Name).Rows()
-	if rows.Next() {
-		newDb := SQL.Exec("DROP DATABASE " + d.MySQL.Name)
-
-		newDb = SQL.Exec("CREATE DATABASE " + d.MySQL.Name)
-		if newDb != nil {
-			fmt.Println("Database dropped and then created !")
-		} else {
-			fmt.Println("Database dropped and Error occured in creation !")
-		}
-
-	} else {
-		newDb := SQL.Exec("CREATE DATABASE " + d.MySQL.Name)
-		if newDb != nil {
-			fmt.Println("Database not found and thus created !")
-		} else {
-			fmt.Println("Database not found and Error occured in creation !")
-		}
-	}
-
-	SQL.Close()
-}

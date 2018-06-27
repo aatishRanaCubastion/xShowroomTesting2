@@ -1,4 +1,31 @@
 {
+  "Database": {
+    "Type": "MySQL",
+    "MySQL": {
+      "Username": "root",
+      "Password": "password",
+      "Name": "xshowroomSampleApp",
+      "Hostname": "127.0.0.1",
+      "Port": 3306,
+      "Parameter": "?parseTime=true"
+    }
+  },
+  "Email": {
+    "Username": "",
+    "Password": "",
+    "Hostname": "",
+    "Port": 25,
+    "From": ""
+  },
+  "Server": {
+    "Hostname": "",
+    "UseHTTP": true,
+    "UseHTTPS": false,
+    "HTTPPort": 9000,
+    "HTTPSPort": 443,
+    "CertFile": "tls/server.crt",
+    "KeyFile": "tls/server.key"
+  },
   "AppInfo": {
     "_comment": "This is a sample data for generating the xShowroom application",
     "Name": "xShowroom",
@@ -831,3 +858,5 @@
     ]
   }
 }
+
+
